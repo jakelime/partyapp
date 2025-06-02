@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import logging
 import os
 from pathlib import Path
 
@@ -17,14 +18,24 @@ from dotenv import load_dotenv
 
 from main.utils import DjangoVersionManager, convert_str_to_bool
 
+lg = logging.getLogger("django")
 load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOGFILE_NAME = "django-partyapp.log"
 LOCAL_TEMP_NAME = "localignore"
-WEBAPP_VERSION = DjangoVersionManager().get_version(skip_git_cmd=True)
+try:
+    # This command fetches the latest tag from the git repository
+    # and uses it as the version number to be used in the application.
+    WEBAPP_VERSION = DjangoVersionManager().get_version(skip_git_cmd=True)
+except Exception as e:
+    print(f"{e};")
+    print("uninitialized git repository, initializing...")
+    dvm = DjangoVersionManager()
+    WEBAPP_VERSION = dvm.get_version(refresh=True)
 
-LOGFILE_FILEPATH = BASE_DIR / "logs" / {LOGFILE_NAME}
+LOGFILE_FILEPATH = BASE_DIR / "logs" / f"{LOGFILE_NAME}"
 LOGFILE_FILEPATH.parent.mkdir(parents=True, exist_ok=True)
 LOGGING = {
     "version": 1,
@@ -126,7 +137,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "main.wsgi.application"
-
+IS_DEVELOPMENT_ENV = convert_str_to_bool(os.environ.get("IS_DEVELOPMENT_ENV", "false"))
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -158,24 +169,38 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# Custom configurations
+AUTH_USER_MODEL = "accounts.CustomUser"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "landingpage"
+AUTHENTICATION_BACKENDS = ["accounts.backends.CustomBackend"]
+# AUTHENTICATION_BACKENDS = ["accounts.backends.NoPasswordBackend"]
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
-
-TIME_ZONE = "UTC"
-
+TIME_ZONE = "Asia/Singapore"
 USE_I18N = True
-
 USE_TZ = True
-
+SHORT_DATE_FORMAT = "Y-m-d"
+SHORT_DATETIME_FORMAT = "Y-m-d HM"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
+STATIC_URL = os.environ.get("DJANGO_STATIC_URL", "static/")
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = os.environ.get("DJANGO_STATIC_ROOT", "")
+MEDIA_URL = os.environ.get("DJANGO_MEDIA_URL", "media/")
+MEDIA_ROOT = os.environ.get("DJANGO_MEDIA_ROOT", "")
 
-STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Extensions required
+DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"

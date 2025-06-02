@@ -56,15 +56,7 @@ class CustomUserCreationForm(UserCreationForm):
         ],
     )
     email = forms.EmailField(
-        required=True,
-        label="Email",
-        help_text=f"Example: john.doe@{settings.ALLOWED_EMAIL_DOMAINS[0]}",
-        validators=[
-            validators.EmailValidator(
-                allowlist=settings.ALLOWED_EMAIL_DOMAINS,
-                message=f"Enter a valid email address; e.g. john.doe@{settings.ALLOWED_EMAIL_DOMAINS[0]}",
-            ),
-        ],
+        required=True, label="Email", help_text="Example: john.doe@email.com"
     )
     helper = FormHelper()
     helper.form_class = "form-horizontal"

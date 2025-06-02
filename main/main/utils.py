@@ -283,7 +283,6 @@ class GitVersionTemplate(ABC):
         try:
             results = self.cm.run(["git", "tag"], show_cmd=show_cmd)
         except Exception as e:
-            lg.warning(f"TODO: To fix frozen exe git tag command, {e=}")
             return "frozenGitVersion"
         tags = results.stdout.decode().splitlines()
         tags = [tag for tag in tags if fnmatch.fnmatch(tag, "v*.*.*")]

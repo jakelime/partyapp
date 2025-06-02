@@ -7,7 +7,7 @@ app_name = "accounts"
 urlpatterns = [
     path("", views.CustomUserListView.as_view(), name="users_list"),
     path("signup/", views.SignUpView.as_view(), name="signup"),
-    path("signup-status/<str:status>", views.signup_status_view, name="signup_status"),
+    path("signup_done/", views.SignUpConfirmView.as_view(), name="signup_done"),
     path("activate/<str:uidb64>/<str:token>", views.activate_view, name="activate"),
     path("login/", views.CustomLoginView.as_view()),
     path("users/<int:pk>", views.CustomUserUpdateView.as_view(), name="user_update"),

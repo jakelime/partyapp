@@ -1,0 +1,16 @@
+<!-- templates/registration/signup.html -->
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <div class="container-fluid">
+    <div class="row">
+      <h1>Registration</h1>
+      <main class="col-md-8 pt-4">
+        {% crispy form %}
+      </main>
+    </div>
+    <div class="row col-8 pt-4 px-1">
+      <small><i>Already have an account? Login <a href={% url 'login' %}>here</a></i></small>
+    </div>
+  </div>
+{% endblock %}

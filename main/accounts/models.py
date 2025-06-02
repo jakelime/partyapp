@@ -11,9 +11,8 @@ from .customvalidators import WhitelistEmailValidator
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password, **extra_fields):
-        if not email:
-            raise ValueError(gettext_lazy("The Email must be set"))
-        email = self.normalize_email(email)
+        if email:
+            email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save()
@@ -35,30 +34,20 @@ class CustomUser(AbstractUser):
     last_name = models.CharField(blank=True, max_length=32)
     preferred_name = models.CharField(blank=True, max_length=64)
     username = models.CharField(max_length=32, blank=True, null=True, unique=True)
-    email = models.EmailField(
-        unique=True,
-        # validators=[WhitelistEmailValidator(allowlist=settings.ALLOWED_EMAIL_DOMAINS)],
-    )
-    email_is_verified = models.BooleanField(default=False)
-
-    password = models.CharField(_("password"), max_length=128, blank=True, null=True)
+    # 700xxxxx, 8chars
+    employee_id = models.IntegerField(blank=True, null=True, unique=True)
+    email = models.EmailField(unique=True, blank=True, null=True)
 
     class Meta:
-        permissions = (("is_game_master", "Game Master"),)
+        permissions = (
+            ("is_admin", "Administrator level access"),
+            ("is_gamemaster", "Game Master level access"),
+        )
 
     def __str__(self):
         return self.username
 
     def save(self, *args, **kwargs):
-        if self.username:
-            if not self.first_name:
-                self.first_name = self.username.split(".")[0].capitalize()
-            if not self.last_name:
-                self.last_name = self.username.split(".")[-1].capitalize()
-            if not self.preferred_name:
-                self.preferred_name = (
-                    f"{self.first_name.capitalize()} {self.last_name.capitalize()}"
-                )
         return super().save(*args, **kwargs)
 
     def get_edit_url(self):
@@ -69,15 +58,3 @@ class CustomUser(AbstractUser):
 
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}"
-
-    def set_password(self, password):
-        if password is not None:
-            super().set_password(password)
-
-    def has_password(self):
-        return self.password is not None
-
-    def check_password(self, raw_password):
-        if not self.has_password():
-            return False
-        return super().check_password(raw_password)

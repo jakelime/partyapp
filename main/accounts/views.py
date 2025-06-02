@@ -1,7 +1,5 @@
+# Create your views here.
 # accounts/views.py
-import logging
-import smtplib
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -13,7 +11,9 @@ from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic.base import TemplateResponseMixin, TemplateView
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.list import ListView
 
 from .forms import (
@@ -24,8 +24,6 @@ from .forms import (
 )
 from .models import CustomUser
 from .tokens import account_activation_token
-
-lg = logging.getLogger("django")
 
 
 def activate_view(request, uidb64, token):
@@ -50,21 +48,15 @@ def activate_view(request, uidb64, token):
 
 class SignUpView(CreateView):
     form_class = CustomUserCreationForm
-    success_url = reverse_lazy("accounts:signup_status", kwargs={"status": "done"})
+    # success_url = reverse_lazy("login")
+    success_url = reverse_lazy("accounts:signup_done")
     template_name = "registration/signup.html"
 
     def form_valid(self, form):
         user = form.save(commit=False)
         user.is_active = False
         user.save()
-        try:
-            self.send_email(user, form)
-        except smtplib.SMTPRecipientsRefused as e:
-            return render(
-                self.request,
-                template_name="accounts/signup_confirm.html",
-                context={"msg": "SMTPRecipientsRefused error", "error_msg": e},
-            )
+        self.send_email(user, form)
         return super().form_valid(form)
 
     def send_email(self, user, form):
@@ -81,6 +73,10 @@ class SignUpView(CreateView):
         to_email = form.cleaned_data.get("email")
         email = EmailMessage(mail_subject, message, to=[to_email])
         email.send(fail_silently=settings.EMAIL_FAIL_SILENTLY)
+
+
+class SignUpConfirmView(TemplateView):
+    template_name = "accounts/signup_confirm.html"
 
 
 class CustomLoginView(LoginView):
@@ -101,7 +97,10 @@ class CustomUserListView(LoginRequiredMixin, ListView):
                 continue
             data = {
                 "user_obj": user_obj,
-                "is_game_master": user_obj.has_perm("accounts.is_game_master"),
+                "is_operator": user_obj.has_perm("accounts.is_operator"),
+                "is_engineer": user_obj.has_perm("accounts.is_engineer"),
+                "is_approver": user_obj.has_perm("accounts.is_approver"),
+                "is_endorser": user_obj.has_perm("accounts.is_endorser"),
             }
             objects.append(data)
         context["objects"] = objects
@@ -114,7 +113,7 @@ class CustomUserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVi
     template_name = "accounts/update_user.html"
     context_object_name = "objects"
     success_url = reverse_lazy("accounts:users_list")
-    permission_required = ["accounts.is_game_master"]
+    permission_required = ["accounts.is_engineer"]
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -126,32 +125,4 @@ class CustomUserProfileUpdateView(LoginRequiredMixin, UpdateView):
     form_class = CustomUserProfileForm
     template_name = "accounts/user_profile.html"
     context_object_name = "objects"
-    success_url = reverse_lazy("landing")
-
-
-def signup_status_view(request, status: str):
-    if request.method == "GET":
-        match status.casefold():
-            case "done":
-                return render(
-                    request,
-                    template_name="accounts/signup_confirm.html",
-                    context={
-                        "msg": "Sign up success. Please check your email inbox or junk folder."
-                    },
-                )
-            case "smtp_recipients_refused":
-                return render(
-                    request,
-                    template_name="accounts/signup_confirm.html",
-                    context={"msg": "SMTPRecipientsRefused error"},
-                )
-            case _:
-                return render(
-                    request,
-                    template_name="accounts/signup_confirm.html",
-                    context={"msg": f"{status} error"},
-                )
-
-    else:
-        return HttpResponse("error")
+    success_url = reverse_lazy("landingpage")
