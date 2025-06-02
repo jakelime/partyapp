@@ -1,5 +1,3 @@
-import datetime
-import fnmatch
 import logging
 import re
 import secrets
@@ -7,10 +5,10 @@ import shutil
 import string
 import subprocess
 import uuid
-from abc import ABC, abstractmethod
+from datetime import datetime
+from fnmatch import fnmatch
 from pathlib import Path
-from typing import Optional
-
+from natsort import natsort_keygen
 
 lg = logging.getLogger("django")
 
@@ -29,14 +27,10 @@ def convert_str_to_bool(value):
         return False
 
 
-def get_utc_timestamp_now() -> datetime.datetime:
-    return datetime.datetime.now(datetime.timezone.utc)
-
-
 def get_datetime_str(
     dtformat: str = "%Y%m%d_%H%M%S", append_microseconds: bool = False
 ) -> str:
-    now = datetime.datetime.now()
+    now = datetime.now()
     timestr = now.strftime(dtformat)
     if append_microseconds:
         ms = now.strftime("%f")[:2]
@@ -45,11 +39,11 @@ def get_datetime_str(
 
 
 def get_today_date(format):
-    today = datetime.datetime.today()
+    today = datetime.today()
     return today.strftime(format)
 
 
-def get_quarter(dt: datetime.datetime):
+def get_quarter(dt: datetime):
     month = dt.month
     match month:
         case _ if month in [1, 2, 3]:
@@ -134,77 +128,53 @@ def get_job_creation_confidence_level(msg):
     return len(matches)
 
 
-def sanitize_filename(input_string):
-    """
-    Converts any user input string into an alphanumeric name suitable for
-    use as a filename in Windows or Linux operating systems.
-
-    Args:
-      input_string: The string to be converted.
-
-    Returns:
-      A new string containing only alphanumeric characters.
-    """
-    # Remove any characters that are not alphanumeric
-    sanitized_string = re.sub(r"[^a-zA-Z0-9]", "", input_string)
-    return sanitized_string
-
-
-def natural_sort(mylist):
-    """
-    Sorts a list of strings in natural order, handling version numbers.
-
-    Args:
-        mylist: The list of strings to sort.
-
-    Returns:
-        A new list with the strings sorted in natural order.
-    """
-
-    def convert(text):
-        return [int(c) if c.isdigit() else c for c in re.split(r"(\d+)", text)]
-
-    return sorted(mylist, key=convert)
+def get_version():
+    return DjangoVersionManager().get_app_version()
 
 
 class VersionManager:
-    version_froot: Path | None = None
-    version_file: Path | None = None
-    filename: str = "app_version.txt"
 
-    def __init__(self, app_version_mode: str = "app_bundles") -> None:
-        match app_version_mode.casefold():
+    def __init__(self, folder_mode: str = "") -> None:
+        """
+        Manages version by placing `app_version.txt` within
+        source folder.
+
+        Args:
+            folder_mode (str, optional): accepts different modes
+            [app_bundles, django, *].
+            app_bundle mode: places app_version.txt in /app/bundles/
+            django mode: places app_version.txt in django_root/main/main/
+            * mode: places app_version.txt in Path(__file__).parent
+            Defaults to "".
+
+        Raises:
+            [Django mode] Raises RuntimeError if unable to locate
+            manage.py.
+        """
+        match folder_mode.lower():
             case "app_bundles":
-                self.init_mode_app_bundles()
+                self.version_froot = Path(__file__).parent / "bundles"
             case "django":
-                self.init_mode_django()
+                self.version_froot = Path(__file__).parent
+                locate_managepy = self.version_froot.parent / "manage.py"
+                if not locate_managepy.is_file():
+                    raise RuntimeError(
+                        f"VersionManager({folder_mode=}) unable to locate django manage.py"
+                    )
             case _:
-                raise NotImplementedError(f"{app_version_mode=}")
-        self.version_file = self.version_froot / self.filename
-
-    def init_mode_app_bundles(self) -> None:
-        self.version_froot = Path(__file__).parent / "bundles"
-        self.version_froot.mkdir(parents=True, exist_ok=True)
-
-    def init_mode_django(self) -> None:
-        self.version_froot = Path(__file__).parent
-        locate_managepy = self.version_froot.parent / "manage.py"
-        if not locate_managepy.is_file():
-            raise RuntimeError("init_mode_django unable to locate django manage.py")
+                self.version_froot = Path(__file__).parent
 
     def write_app_version_file(
-        self, version: str = "", fpath: Optional[Path] = None
+        self, version: str = "", filename: str = "app_version.txt"
     ) -> Path:
-        if fpath is None:
-            fpath = self.version_file
+        fpath = self.version_froot / filename
         with open(fpath, "w") as fwriter:
             fwriter.write(version)
         lg.info(f"app_version={version} updated > {fpath}")
         return fpath
 
-    def get_app_version_from_file(self, fpath: Optional[Path] = None) -> str:
-        if fpath is None:
-            fpath = self.version_file
+    def get_app_version_from_file(self, filename: str = "app_version.txt"):
+        fpath = self.version_froot / filename
         with open(fpath, "r") as fr:
             version = fr.read().strip()
         return version
@@ -265,28 +235,22 @@ class CommandManager:
         lg.info(f"stderr:\n{results.stderr.decode()}")
 
 
-class GitVersionTemplate(ABC):
-    vm: VersionManager = None
-    cm: CommandManager = None
+class GitVersionManager:
+    def __init__(
+        self,
+        ver_mgr: VersionManager,
+        cmd_mgr: CommandManager,
+    ) -> None:
+        self.ver_mgr = ver_mgr
+        self.cmd_mgr = cmd_mgr
+        self.version = None
 
-    @abstractmethod
-    def init_versionmanager(self, app_version_mode: str):
-        # return VersionManager(app_version_mode)
-        pass
-
-    @abstractmethod
-    def init_commandmanager(self, env: Optional[dict]):
-        # return VersionManager(app_version_mode)
-        pass
-
-    def runcmd_get_git_tag_version(self, show_cmd: bool = False) -> str:
-        try:
-            results = self.cm.run(["git", "tag"], show_cmd=show_cmd)
-        except Exception as e:
-            return "frozenGitVersion"
+    def run_git_get_app_version(self, show_cmd: bool = False) -> str:
+        results = self.cmd_mgr.run(["git", "tag"], show_cmd=show_cmd)
         tags = results.stdout.decode().splitlines()
-        tags = [tag for tag in tags if fnmatch.fnmatch(tag, "v*.*.*")]
-        tags = natural_sort(tags)
+        tags = [tag for tag in tags if fnmatch(tag, "v*.*.*")]
+        natsort_key = natsort_keygen()
+        tags.sort(key=natsort_key)
 
         try:
             latest_tag = tags[-1]
@@ -295,50 +259,75 @@ class GitVersionTemplate(ABC):
             return "v0.0.0"
         return latest_tag
 
-    def get_version(self, skip_git_cmd: bool = False, refresh=False) -> str:
-        ver = ""
-        if refresh and not skip_git_cmd:
-            self.run_git_tag_and_write_to_file()
+    def run_git_submodule_update(self, cwd: Path) -> None:
+        cmds = ["git", "submodule", "update", "--init", "--recursive"]
+        lg.info("running git submodule update...")
+        self.cmd_mgr.run_with_output(cmd=cmds, cwd=str(cwd.absolute()))
 
-        ver = self.vm.get_app_version_from_file()
+    def get_app_version(self, refresh: bool = False) -> str:
+        """gets the app version. if refresh is enabled, it will
+        run git tag command to pull the latest tag.
 
-        if not ver:
-            if skip_git_cmd:
-                return "verError"
-            else:
-                ver = self.runcmd_get_git_tag_version()
-                self.vm.write_app_version_file(ver)
-                return self.get_version(skip_git_cmd=True)
+        Args:
+            refresh (bool, optional): runs git command to get latest tag. Defaults to False.
 
-        return ver
+        Returns:
+            str: version number
+        """
+        if (self.version is not None) and (not refresh):
+            return self.version
+        else:
+            self.version = self.run_git_get_app_version()
+            return self.get_app_version()
 
-    def run_git_tag_and_write_to_file(self) -> Path | None:
-        ver = self.runcmd_get_git_tag_version()
-        if ver:
-            path = self.vm.write_app_version_file(ver)
-            return path
-        return None
-
-
-class GitVersionManager(GitVersionTemplate):
-    def __init__(self, app_version_mode: str = "app_bundles", env: dict | None = None):
-        self.vm = self.init_versionmanager(app_version_mode)
-        self.cm = self.init_commandmanager(env)
-
-    def init_versionmanager(self, app_version_mode):
-        return VersionManager(app_version_mode)
-
-    def init_commandmanager(self, env):
-        return CommandManager(env)
+    def write_app_version_file(
+        self,
+        version: str = "",
+        filename: str = "app_version.txt",
+        refresh: bool = False,
+    ) -> Path:
+        if not version:
+            version = self.get_app_version(refresh=refresh)
+        self.ver_mgr.write_app_version_file(version, filename)
 
 
-class DjangoVersionManager(GitVersionTemplate):
-    def __init__(self, env: dict | None = None):
-        self.vm = self.init_versionmanager()
-        self.cm = self.init_commandmanager(env)
+class GitCommandManager(CommandManager):
+    def __init__(self, env: dict | None = None) -> None:
+        super().__init__(env)
+        self.version = None
 
-    def init_versionmanager(self):
-        return VersionManager("django")
+    def get_app_version(self, refresh: bool = False) -> str:
+        """gets the app version. if refresh is enabled, it will
+        run git tag command to pull the latest tag.
 
-    def init_commandmanager(self, env):
-        return CommandManager(env)
+        Args:
+            refresh (bool, optional): runs git command to get latest tag. Defaults to False.
+
+        Returns:
+            str: version number
+        """
+        if (self.version is not None) and (not refresh):
+            return self.version
+        else:
+            self.version = self.run_git_get_app_version()
+            return self.get_app_version()
+
+    def write_app_version_file(
+        self,
+        version: str = "",
+        filename: str = "app_version.txt",
+        refresh: bool = False,
+    ) -> Path:
+        if not version:
+            version = self.get_app_version(refresh=refresh)
+        return super().write_app_version_file(version=version, filename=filename)
+
+
+class DjangoVersionManager(GitVersionManager):
+    def __init__(self) -> None:
+        super().__init__(VersionManager(folder_mode="django"), CommandManager())
+
+
+class AppVersionManager(GitVersionManager):
+    def __init__(self) -> None:
+        super().__init__(VersionManager(folder_mode="bundles"), CommandManager())
