@@ -28,7 +28,7 @@ LOCAL_TEMP_NAME = "localignore"
 try:
     # This command fetches the latest tag from the git repository
     # and uses it as the version number to be used in the application.
-    WEBAPP_VERSION = DjangoVersionManager().get_app_version(skip_git_cmd=True)
+    WEBAPP_VERSION = DjangoVersionManager().get_app_version(refresh=False)
 except Exception as e:
     print(f"{e};")
     print("uninitialized git repository, initializing...")
@@ -149,7 +149,8 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
-
+# TODO: Construct db in `app_local_tmp` directory
+# TODO: ignore `app_local_tmp`, and add employee_data there
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -176,7 +177,7 @@ LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "landingpage"
 AUTHENTICATION_BACKENDS = ["accounts.backends.CustomBackend"]
 # AUTHENTICATION_BACKENDS = ["accounts.backends.NoPasswordBackend"]
-
+EMAIL_FAIL_SILENTLY = True
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 LANGUAGE_CODE = "en-us"
