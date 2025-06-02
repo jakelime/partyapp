@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-4">
+    {% if form.errors %}
+      <div class="alert alert-danger" role="alert">{{ form.errors }}</div>
+    {% endif %}
+    {% if perms.accounts.is_engineer %}
+      <h1>Edit User</h1>
+      {{ request.get_full_path }}
+      <main class="col-md-8 pt-4">
+        {% crispy form %}
+      </main>
+    {% else %}
+      <h1>Not authorized.</h1>
+    {% endif %}
+  </main>
+{% endblock %}

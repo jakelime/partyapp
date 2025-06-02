@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-4">
+        {% if form.errors %}<div class="alert alert-danger" role="alert">{{ form.errors }}</div>{% endif %}
+        {% if user.get_profile_url == request.get_full_path %}
+            <h1>Welcome {{ user.preferred_name }}</h1>
+            <div class="row col-md-8 pt-4">
+                {% crispy form %}
+            </div>
+            <div class="row col-md-8 pt-4">
+                <a href={% url 'password_change' %}> Change password</a>
+            </div>
+        {% else %}
+            Not authorized.
+        {% endif %}
+    </main>
+{% endblock content %}
