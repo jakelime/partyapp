@@ -7,7 +7,7 @@
 *gbBackup-*.tar.gz
 *:Zone.Identifier
 logs/
-*/app_version.txt
+**/app_version.txt
 
 .DS_Store
 
