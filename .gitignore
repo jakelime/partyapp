@@ -2,12 +2,12 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,windows,linux
 
 .vscode
-logs/
 
 ### Project specifics ###
 *gbBackup-*.tar.gz
 *:Zone.Identifier
-
+logs/
+*/app_version.txt
 
 .DS_Store
 
