@@ -24,7 +24,9 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOGFILE_NAME = "django-partyapp.log"
-LOCAL_TEMP_NAME = "localignore"
+APP_LOCAL_TEMP_DIR = BASE_DIR / "app_local_temp"
+APP_LOCAL_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+
 try:
     # This command fetches the latest tag from the git repository
     # and uses it as the version number to be used in the application.
@@ -35,7 +37,7 @@ except Exception as e:
     dvm = DjangoVersionManager()
     WEBAPP_VERSION = dvm.get_app_version(refresh=True)
 
-LOGFILE_FILEPATH = BASE_DIR / "logs" / f"{LOGFILE_NAME}"
+LOGFILE_FILEPATH = BASE_DIR / APP_LOCAL_TEMP_DIR / "logs" / f"{LOGFILE_NAME}"
 LOGFILE_FILEPATH.parent.mkdir(parents=True, exist_ok=True)
 LOGGING = {
     "version": 1,
@@ -143,13 +145,14 @@ IS_DEVELOPMENT_ENV = convert_str_to_bool(os.environ.get("IS_DEVELOPMENT_ENV", "f
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+SQLITE_DB_PATH = APP_LOCAL_TEMP_DIR / "database" / "db.sqlite3"
+SQLITE_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": SQLITE_DB_PATH,
     }
 }
-# TODO: Construct db in `app_local_tmp` directory
 # TODO: ignore `app_local_tmp`, and add employee_data there
 
 # Password validation
