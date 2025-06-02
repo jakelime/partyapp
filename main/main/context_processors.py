@@ -7,7 +7,20 @@ def get_sw_version(*args, **kwargs):
     :return: version string
     :rtype: str
     """
-    return {"appVersion": settings.WEBAPP_VERSION}
+    return {"APP_VERSION": settings.WEBAPP_VERSION}
+
+
+def get_company_info(*args, **kwargs) -> dict:
+    """function to get company information from settings.py
+
+    :return: company information
+    :rtype: dict
+    """
+    return {
+        "INFO_COMPANY_NAME": settings.INFO_COMPANY_NAME,
+        "INFO_COMPANY_DEPARTMENT": settings.INFO_COMPANY_DEPARTMENT,
+        "INFO_COMPANY_COMMITTEE": settings.INFO_COMPANY_COMMITTEE,
+    }
 
 
 def is_development_environment(host) -> bool:

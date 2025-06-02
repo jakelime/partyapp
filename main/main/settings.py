@@ -130,6 +130,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "main.context_processors.get_sw_version",
+                "main.context_processors.get_company_info",
                 "main.context_processors.is_development_environment",
             ],
         },
@@ -204,3 +205,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap5.html"
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+
+# Company information
+INFO_COMPANY_NAME = os.environ.get("INFO_COMPANY_NAME", "MyEngineeringFirm")
+INFO_COMPANY_DEPARTMENT = os.environ.get(
+    "INFO_COMPANY_DEPARTMENT", "Research and Development Department"
+)
+INFO_COMPANY_COMMITTEE = os.environ.get(
+    "INFO_COMPANY_COMMITTEE", "Durian Party Organistion Committee"
+)
