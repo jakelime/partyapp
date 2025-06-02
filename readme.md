@@ -14,7 +14,6 @@ pip install -r requirements.txt -i https://artifact.stengglink.com/repository/py
 # set up your .env files
 ```
 
-
 ## Example `.env` file
 
 To generate a `DJANGO_SECRET_KEY`, you can run this command
@@ -95,6 +94,7 @@ python manage.py startapp automsa
 1. On the importing server with PosgresDB, run `python manage.py mlrsimport`
 1. After import, the the `pg_serial_sequence` variable in the database is not updated to the latest
 1. Run this command to reset sqlsequence for all the tables `python manage.py sqlsequencereset mlrs`
+
    1. It will output SQL script to stdout
 
       ```sql
