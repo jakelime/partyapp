@@ -8,6 +8,7 @@
 *:Zone.Identifier
 logs/
 **/app_version.txt
+app_local_temp/
 
 .DS_Store
 
