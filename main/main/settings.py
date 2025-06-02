@@ -28,12 +28,12 @@ LOCAL_TEMP_NAME = "localignore"
 try:
     # This command fetches the latest tag from the git repository
     # and uses it as the version number to be used in the application.
-    WEBAPP_VERSION = DjangoVersionManager().get_version(skip_git_cmd=True)
+    WEBAPP_VERSION = DjangoVersionManager().get_app_version(skip_git_cmd=True)
 except Exception as e:
     print(f"{e};")
     print("uninitialized git repository, initializing...")
     dvm = DjangoVersionManager()
-    WEBAPP_VERSION = dvm.get_version(refresh=True)
+    WEBAPP_VERSION = dvm.get_app_version(refresh=True)
 
 LOGFILE_FILEPATH = BASE_DIR / "logs" / f"{LOGFILE_NAME}"
 LOGFILE_FILEPATH.parent.mkdir(parents=True, exist_ok=True)
