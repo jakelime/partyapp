@@ -113,9 +113,6 @@ class CustomUserChangeForm(UserChangeForm):
         username = self.fields.get("username")
         if username:
             username.disabled = True
-        email_is_verified = self.fields.get("email_is_verified")
-        if email_is_verified:
-            email_is_verified.disabled = True
         email = self.fields.get("email")
         if email:
             email.help_text = "Email id must be same as username!"

@@ -20,7 +20,6 @@ class CustomUserAdmin(UserAdmin):
                 "fields": (
                     "username",
                     "email",
-                    "email_is_verified",
                     "password",
                 )
             },
