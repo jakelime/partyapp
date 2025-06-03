@@ -29,4 +29,5 @@ urlpatterns = [
     path("controls/", include("controls.urls")),
     path("bingo/", include("bingo.urls")),
     path("knowledge/", include("knowledge.urls")),
+    path("obstacle/", include("obstacle.urls")),
 ]
