@@ -26,4 +26,6 @@ urlpatterns = [
     path(
         "", TemplateView.as_view(template_name="landingpage.html"), name="landingpage"
     ),
+    path("controls/", include("controls.urls")),
+    path("bingo/", include("bingo.urls")),
 ]

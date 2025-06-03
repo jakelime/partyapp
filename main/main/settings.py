@@ -106,6 +106,7 @@ INSTALLED_APPS = [
     "durian",
     "bingo",
     "obstacle",
+    "controls",
 ]
 
 MIDDLEWARE = [

@@ -79,5 +79,14 @@
         </form>
       </div>
     </div>
+    <div class="col-md-6 pt-2 pb-2">
+      <div class="h-100 p-5 bg-light border rounded-3">
+        <h2>Game Controls</h2>
+        <p>Login as a gamemaster for game controls.</p>
+        <form action="{% url 'controls:home' %}">
+          <input class="btn btn-outline-secondary" type="submit" value="Login" />
+        </form>
+      </div>
+    </div>
   </div>
 {% endblock %}
