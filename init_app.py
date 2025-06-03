@@ -20,10 +20,11 @@ def run_command(cmds: list[str]) -> list:
 
 
 def run_django_commands():
-    run_command(["python", "main/manage.py", "makemigrations"])
     run_command(["python", "main/manage.py", "makemigrations", "accounts"])
     run_command(["python", "main/manage.py", "makemigrations", "employees"])
     run_command(["python", "main/manage.py", "makemigrations", "bingo"])
+    run_command(["python", "main/manage.py", "makemigrations", "knowledge"])
+    run_command(["python", "main/manage.py", "makemigrations", "obstacle"])
     run_command(["python", "main/manage.py", "migrate"])
     run_command(["python", "main/manage.py", "import_employees"])
     print("All Django commands executed successfully.")
