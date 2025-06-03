@@ -36,8 +36,10 @@ class CustomUser(AbstractUser):
         null=True,
         # related_name="%(app_label)s_%(class)s_emp_id_obj",
     )
-
     email = models.EmailField(blank=True, null=True, unique=True)
+    is_no_password = models.BooleanField(default=False)
+    has_claimed = models.BooleanField(default=False)
+
 
     class Meta:
         permissions = (
@@ -48,7 +50,8 @@ class CustomUser(AbstractUser):
     def __str__(self):
         if self.username is None:
             return f"none-{self.pk}"
-        return self.username
+        else:
+            return str(self.emp_id_obj)
 
     def save(self, *args, **kwargs):
         return super().save(*args, **kwargs)

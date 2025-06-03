@@ -9,4 +9,4 @@ lg = logging.getLogger("django")
 
 
 class HomeView(LoginRequiredMixinNopassword, TemplateView):
-    template_name = "home_template.html"
+    template_name = "obstacle/home.html"

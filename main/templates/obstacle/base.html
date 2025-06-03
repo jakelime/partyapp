@@ -1,7 +1,6 @@
 {% load static %}
 {% url 'landingpage' as url_landing %}
-{% url 'controls:home' as url_home %}
-{% url 'controls:users_list_view' as users_list_view %}
+{% url 'obstacle:home' as url_home %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -20,7 +19,7 @@
     <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
       <a href="{% url 'landingpage' %}"><img src="{% static 'images/logo_bw.png' %}" style="max-height: 55px;" alt="logo" /></a>
       <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-      <input class="form-control form-control-dark w-100 rounded-0 border-0" type="text" placeholder="Party Controls" aria-label="party_controls" />
+      <input class="form-control form-control-dark w-100 rounded-0 border-0" type="text" placeholder="Obstacle Course" aria-label="obstacle" />
       <div class="navbar-nav">
         <div class="nav-item text-nowrap">
           {% if user.is_authenticated %}
@@ -45,12 +44,6 @@
                 <a class="nav-link {% if request.path == url_home %}{% endif %}" href="{{ url_home }}">
                   <span data-feather="home" class="align-text-bottom"></span>
                   Home
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link {% if request.path == users_list_view %}{% endif %}" href="{{ users_list_view }}">
-                  <span data-feather="list" class="align-text-bottom"></span>
-                  UsersList
                 </a>
               </li>
             </ul>

@@ -18,8 +18,10 @@ from django.views.generic.list import ListView
 from employees import models as employees_models
 
 from accounts import forms as accounts_forms
-from accounts import models as accounts_model
 from accounts.tokens import account_activation_token
+from main.utils import generate_random_email
+
+UserModel = get_user_model()
 
 
 def activate_view(request, uidb64, token):
@@ -43,33 +45,27 @@ def activate_view(request, uidb64, token):
 
 class SignUpViewNopassword(CreateView):
     form_class = accounts_forms.CustomUserCreationFormNopassword
-    success_url = reverse_lazy("accounts:signup_done")
+    success_url = reverse_lazy("accounts:login_no_password")
     template_name = "registration/signup-nopassword.html"
 
     def form_valid(self, form):
-
         employee_id = form.cleaned_data.get("employee_id")
         emp_obj = employees_models.EmployeeModel.objects.filter(
             employee_id=employee_id
         ).first()
-        user, created = accounts_model.CustomUser.objects.get_or_create(
-            username=str(employee_id),
-        )
-        if created:
+        user = UserModel.objects.filter(username=str(employee_id)).first()
+        if not user:
+            user = form.save(commit=False)
+            user.username = str(employee_id)
             user.emp_id_obj = emp_obj
-            user.password1 = settings.DEFAULT_USER_PASSWORD
-            user.password2 = settings.DEFAULT_USER_PASSWORD
-            user.email = f"{employee_id}@stenggdummy.com"
+            user.email = generate_random_email(name=employee_id)
             user.is_active = True
+            user.is_no_password = True
+            user.preferred_name = emp_obj.name
             user.save()
-
-        print(f"{form=}")
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        print(f"{form=}")
-        employee_id = form.cleaned_data.get("employee_id")
-        print(f"{employee_id=}")
         messages.add_message(
             self.request,
             messages.ERROR,
@@ -110,7 +106,7 @@ class SignUpView(CreateView):
             )
         except Exception as e:
             messages.add_message(self.request, messages.ERROR, "Email sending failed.")
-            messages.add_message(self.request, messages.ERROR, e)
+            messages.add_message(self.request, messages.ERROR, f"{e}. Please contact the administrator ({settings.ADMIN_EMAIL}).")
 
 
 class SignUpConfirmView(TemplateView):
@@ -121,107 +117,13 @@ class CustomLoginView(LoginView):
     authentication_form = accounts_forms.CustomUserLoginForm
 
 
-# class CustomLoginRedirectNopassword(LoginView):
-#     """
-#     Display the login form and handle the login action.
-#     """
-
-#     form_class = AuthenticationForm
-#     authentication_form = None
-#     template_name = "registration/login.html"
-#     redirect_authenticated_user = False
-#     extra_context = None
-
-#     @method_decorator(sensitive_post_parameters())
-#     @method_decorator(csrf_protect)
-#     @method_decorator(never_cache)
-#     def dispatch(self, request, *args, **kwargs):
-#         if self.redirect_authenticated_user and self.request.user.is_authenticated:
-#             redirect_to = self.get_success_url()
-#             if redirect_to == self.request.path:
-#                 raise ValueError(
-#                     "Redirection loop for authenticated user detected. Check that "
-#                     "your LOGIN_REDIRECT_URL doesn't point to a login page."
-#                 )
-#             return HttpResponseRedirect(redirect_to)
-#         return super().dispatch(request, *args, **kwargs)
-
-#     def get_default_redirect_url(self):
-#         """Return the default redirect URL."""
-#         if self.next_page:
-#             return resolve_url(self.next_page)
-#         else:
-#             return resolve_url(settings.LOGIN_REDIRECT_URL)
-
-#     def get_form_class(self):
-#         return self.authentication_form or self.form_class
-
-#     def get_form_kwargs(self):
-#         kwargs = super().get_form_kwargs()
-#         kwargs["request"] = self.request
-#         return kwargs
-
-#     def form_valid(self, form):
-#         """Security check complete. Log the user in."""
-#         auth_login(self.request, form.get_user())
-#         return HttpResponseRedirect(self.get_success_url())
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         current_site = get_current_site(self.request)
-#         context.update(
-#             {
-#                 self.redirect_field_name: self.get_redirect_url(),
-#                 "site": current_site,
-#                 "site_name": current_site.name,
-#                 **(self.extra_context or {}),
-#             }
-#         )
-#         return context
-
-
 class CustomLoginViewNopassword(LoginView):
-    form_class = accounts_forms.CustomUserLoginFormNopassword
     authentication_form = accounts_forms.CustomUserLoginFormNopassword
     template_name = "registration/login-no-password.html"
 
-    def get_default_redirect_url(self):
-        """Return the default redirect URL."""
-        if self.next_page:
-            return resolve_url(self.next_page)
-        else:
-            return resolve_url(settings.LOGIN_REDIRECT_URL)
-
-    def get_form_class(self):
-        return self.authentication_form or self.form_class
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["request"] = self.request
-        return kwargs
-
-    def form_valid(self, form):
-        """Security check complete. Log the user in."""
-        print(f"{form=}")
-        # auth_login(self.request, form.get_user())
-        return HttpResponseRedirect(self.get_success_url())
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        current_site = get_current_site(self.request)
-        context.update(
-            {
-                self.redirect_field_name: self.get_redirect_url(),
-                "site": current_site,
-                "site_name": current_site.name,
-                **(self.extra_context or {}),
-            }
-        )
-        return context
-
 
 class CustomUserListView(LoginRequiredMixin, ListView):
-    model = accounts_model.CustomUser
+    model = UserModel
     template_name = "accounts/users_list.html"
     context_object_name = "objects"
 
@@ -245,7 +147,7 @@ class CustomUserListView(LoginRequiredMixin, ListView):
 
 
 class CustomUserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
-    model = accounts_model.CustomUser
+    model = UserModel
     form_class = accounts_forms.CustomUserChangeForm
     template_name = "accounts/update_user.html"
     context_object_name = "objects"
@@ -258,7 +160,7 @@ class CustomUserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVi
 
 
 class CustomUserProfileUpdateView(LoginRequiredMixin, UpdateView):
-    model = accounts_model.CustomUser
+    model = UserModel
     form_class = accounts_forms.CustomUserProfileForm
     template_name = "accounts/user_profile.html"
     context_object_name = "objects"
