@@ -1,6 +1,7 @@
 # Create your views here.
 # accounts/views.py
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView
@@ -46,6 +47,34 @@ def activate_view(request, uidb64, token):
         return render(request, "accounts/invalid_activation.html")
 
 
+class PasswordlessSignUpView(CreateView):
+    form_class = CustomUserCreationForm
+    success_url = reverse_lazy("accounts:signup_done")
+    template_name = "registration/passwordless_signup.html"
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.is_active = False
+        user.save()
+        self.send_email(user, form)
+        return super().form_valid(form)
+
+    def send_email(self, user, form):
+        mail_subject = "[MLRS] Activation link for new MLRS account"
+        message = render_to_string(
+            "accounts/activation_email.txt",
+            {
+                "user": user,
+                "domain": self.request.get_host(),
+                "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                "token": account_activation_token.make_token(user),
+            },
+        )
+        to_email = form.cleaned_data.get("email")
+        email = EmailMessage(mail_subject, message, to=[to_email])
+        email.send(fail_silently=settings.EMAIL_FAIL_SILENTLY)
+
+
 class SignUpView(CreateView):
     form_class = CustomUserCreationForm
     # success_url = reverse_lazy("login")
@@ -72,7 +101,14 @@ class SignUpView(CreateView):
         )
         to_email = form.cleaned_data.get("email")
         email = EmailMessage(mail_subject, message, to=[to_email])
-        email.send(fail_silently=settings.EMAIL_FAIL_SILENTLY)
+        try:
+            email.send(fail_silently=False)
+            messages.add_message(
+                self.request, messages.INFO, f"Email sent successfully to {to_email}"
+            )
+        except Exception as e:
+            messages.add_message(self.request, messages.ERROR, "Email sending failed.")
+            messages.add_message(self.request, messages.ERROR, e)
 
 
 class SignUpConfirmView(TemplateView):
