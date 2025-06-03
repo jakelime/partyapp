@@ -1,0 +1,169 @@
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>7x7 Button Grid</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+            }
+
+            .grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+            width: 100%;
+            }
+
+            .grid button {
+            aspect-ratio: 1 / 1;  /* Make buttons always square */
+            width: 100%;
+            font-size: clamp(64px, 4vw, 128px); /* Scales font between 16 and 32px */
+            cursor: pointer;
+            border: 1px solid #888;
+            border-radius: 6px;
+            background-color: white;
+            transition: background-color 0.2s ease;
+            }
+
+            .grid button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            }
+
+            /* Optional: slightly smaller gap on small screens */
+            @media (max-width: 360px) {
+            .grid {
+                gap: 1px;
+            }
+            }
+    </style>
+</head>
+<body>
+    <div style="display:flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; ">
+    <div class="grid">
+        <!-- 7x7 Buttons with data attributes -->
+        <!-- Buttons will call the same JS listener -->
+        <!-- You can copy this structure into a Django template too -->
+        <button data-row="0" data-col="0">0,0</button>
+        <button data-row="0" data-col="1">0,1</button>
+        <button data-row="0" data-col="2">0,2</button>
+        <button data-row="0" data-col="3">0,3</button>
+        <button data-row="0" data-col="4">0,4</button>
+        <button data-row="0" data-col="5">0,5</button>
+        <button data-row="0" data-col="6">0,6</button>
+
+        <button data-row="1" data-col="0">1,0</button>
+        <button data-row="1" data-col="1">1,1</button>
+        <button data-row="1" data-col="2">1,2</button>
+        <button data-row="1" data-col="3">1,3</button>
+        <button data-row="1" data-col="4">1,4</button>
+        <button data-row="1" data-col="5">1,5</button>
+        <button data-row="1" data-col="6">1,6</button>
+
+        <button data-row="2" data-col="0">2,0</button>
+        <button data-row="2" data-col="1">2,1</button>
+        <button data-row="2" data-col="2">2,2</button>
+        <button data-row="2" data-col="3">2,3</button>
+        <button data-row="2" data-col="4">2,4</button>
+        <button data-row="2" data-col="5">2,5</button>
+        <button data-row="2" data-col="6">2,6</button>
+
+        <button data-row="3" data-col="0">3,0</button>
+        <button data-row="3" data-col="1">3,1</button>
+        <button data-row="3" data-col="2">3,2</button>
+        <button data-row="3" data-col="3">3,3</button>
+        <button data-row="3" data-col="4">3,4</button>
+        <button data-row="3" data-col="5">3,5</button>
+        <button data-row="3" data-col="6">3,6</button>
+
+        <button data-row="4" data-col="0">4,0</button>
+        <button data-row="4" data-col="1">4,1</button>
+        <button data-row="4" data-col="2">4,2</button>
+        <button data-row="4" data-col="3">4,3</button>
+        <button data-row="4" data-col="4">4,4</button>
+        <button data-row="4" data-col="5">4,5</button>
+        <button data-row="4" data-col="6">4,6</button>
+
+        <button data-row="5" data-col="0">5,0</button>
+        <button data-row="5" data-col="1">5,1</button>
+        <button data-row="5" data-col="2">5,2</button>
+        <button data-row="5" data-col="3">5,3</button>
+        <button data-row="5" data-col="4">5,4</button>
+        <button data-row="5" data-col="5">5,5</button>
+        <button data-row="5" data-col="6">5,6</button>
+
+        <button data-row="6" data-col="0">6,0</button>
+        <button data-row="6" data-col="1">6,1</button>
+        <button data-row="6" data-col="2">6,2</button>
+        <button data-row="6" data-col="3">6,3</button>
+        <button data-row="6" data-col="4">6,4</button>
+        <button data-row="6" data-col="5">6,5</button>
+        <button data-row="6" data-col="6">6,6</button>
+    </div>
+
+    <script>
+
+        //const winningNumbers = [5,8,2,3,6,27,15]
+         
+        const winningNumbers = {{ winning_numbers|safe }};
+        //const boardId = {{ boardId }};
+        const boardNumbers = {{ board.board|safe }};
+        //const isBingo = {{ isBingo }}
+        
+
+        const allButtons = document.querySelectorAll('.grid button');
+        const bingoButton = document.getElementById('bingoButton');
+        const isBingo = false;
+
+        const closedDurianUrl = 'https://closeddurianimagepath.png';
+        const openDurianUrl = 'https://opendurianimagepath.png';
+
+        if(isBingo){
+            bingoButton.disabled = false;
+        }
+
+        allButtons.forEach(button => {
+            const row = parseInt(button.getAttribute('data-row'));
+            const col = parseInt(button.getAttribute('data-col'));
+            if (boardNumbers[row] && boardNumbers[row][col] !== undefined) {
+                button.textContent = boardNumbers[row][col];
+                if(winningNumbers.includes(boardNumbers[row][col])){
+                    button.disabled=true;
+                    button.style.backgroundImage = 'url(${openDurianUrl})';
+                }
+                else{
+                    button.disabled=true;
+                    button.style.backgroundImage = 'url(${closedDurianUrl})';
+                    setTimeout(() => { button.disabled= false}, 3000);
+                }
+            }
+        });
+
+        allButtons.forEach(button => {
+            button.addEventListener('click', event => {
+                const row = event.target.getAttribute('data-row');
+                const col = event.target.getAttribute('data-col');
+                alert("Refresh");
+
+                //insert link to view here.
+                window.location.href = 'bingo/play/board?=' + boardId;
+
+                //if we doing the ajax call instead, repopulate winningnumbers ONLY then call the above function again.
+                
+            });
+        });
+       
+    </script>
+</body>
+
+{% endblock %}

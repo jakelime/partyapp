@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-4"> 
+  </h1>
+    <form method = "POST">
+      <div class="col-lg-10 pt-4">
+      {% csrf_token %}
+      <input type="submit" value="draw" name="draw">
+      <input type="submit" value="newboard" name="newboard">
+      <input type="submit" value="reset" name="reset">
+      </div>
+    </form>
+  </main>
+  
+{% endblock %}
