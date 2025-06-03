@@ -106,7 +106,7 @@ class SignUpView(CreateView):
             )
         except Exception as e:
             messages.add_message(self.request, messages.ERROR, "Email sending failed.")
-            messages.add_message(self.request, messages.ERROR, e)
+            messages.add_message(self.request, messages.ERROR, f"{e}. Please contact the administrator ({settings.ADMIN_EMAIL}).")
 
 
 class SignUpConfirmView(TemplateView):
