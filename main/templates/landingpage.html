@@ -23,10 +23,10 @@
             <h3>Please sign in</h3>
           </div>
           <div class="d-flex align-items-center justify-content-center">
-            <form action="{% url 'login' %}">
+            <form action="{% url 'accounts:login_no_password' %}">
               <input class="btn btn-outline-light" type="submit" value="Log In" />
             </form>
-            <form action="{% url 'accounts:signup' %}">
+            <form action="{% url 'accounts:signup_no_password' %}">
               <input class="btn btn-outline-light" type="submit" value="Register" />
             </form>
           </div>

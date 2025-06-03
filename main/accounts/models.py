@@ -38,6 +38,8 @@ class CustomUser(AbstractUser):
     )
     email = models.EmailField(blank=True, null=True, unique=True)
     is_no_password = models.BooleanField(default=False)
+    has_claimed = models.BooleanField(default=False)
+
 
     class Meta:
         permissions = (

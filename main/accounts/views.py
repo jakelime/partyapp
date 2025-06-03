@@ -45,7 +45,7 @@ def activate_view(request, uidb64, token):
 
 class SignUpViewNopassword(CreateView):
     form_class = accounts_forms.CustomUserCreationFormNopassword
-    success_url = reverse_lazy("accounts:signup_done")
+    success_url = reverse_lazy("accounts:login_no_password")
     template_name = "registration/signup-nopassword.html"
 
     def form_valid(self, form):

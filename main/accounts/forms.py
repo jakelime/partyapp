@@ -60,11 +60,12 @@ class AuthenticationFormNopassword(forms.Form):
         # if username is not None and password:
         if username is not None:
             self.user_cache = UserModel.objects.filter(username=username).first()
-            print(f"{self.user_cache=}")
-            if not self.user_cache.is_no_password:
-                raise self.get_invalid_login_error()
+
             if self.user_cache is None:
                 raise self.get_invalid_login_error()
+            if not self.user_cache.is_no_password:
+                raise self.get_invalid_login_error()
+
             else:
                 self.confirm_login_allowed(self.user_cache)
                 print(f"login is allowed for {self.user_cache}")

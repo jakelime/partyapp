@@ -17,6 +17,9 @@ from django.views.generic.edit import CreateView, UpdateView
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
+from accounts import djfilters as accounts_filters
+from accounts import models as accounts_models
+from accounts import tables as accounts_tables
 
 lg = logging.getLogger("django")
 
@@ -24,3 +27,13 @@ lg = logging.getLogger("django")
 class HomeView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
     template_name = "controls/home.html"
     permission_required = ["accounts.is_gamemaster"]
+
+
+class UserListView(
+    LoginRequiredMixin, PermissionRequiredMixin, SingleTableMixin, FilterView
+):
+    template_name = "controls/users_list.html"
+    permission_required = ["accounts.is_gamemaster"]
+    model = accounts_models.CustomUser
+    table_class = accounts_tables.UsersListTable
+    filterset_class = accounts_filters.CustomUsersFilter
