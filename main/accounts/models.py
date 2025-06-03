@@ -28,6 +28,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(gettext_lazy("Superuser must have is_superuser=True."))
         return self.create_user(email, password, **extra_fields)
 
+
 # TODO: Enable password-less sign ups
 class CustomUser(AbstractUser):
     first_name = models.CharField(blank=True, max_length=32)
@@ -35,8 +36,8 @@ class CustomUser(AbstractUser):
     preferred_name = models.CharField(blank=True, max_length=64)
     username = models.CharField(max_length=32, blank=True, null=True, unique=True)
     # 700xxxxx, 8chars
-    employee_id = models.IntegerField(blank=True, null=True, unique=True)
-    email = models.EmailField(unique=True, blank=True, null=True)
+    employee_id = models.CharField(max_length=12, blank=True, null=True, unique=True)
+    email = models.EmailField(blank=True, null=True, unique=True)
 
     class Meta:
         permissions = (

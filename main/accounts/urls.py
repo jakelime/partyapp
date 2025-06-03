@@ -10,6 +10,7 @@ urlpatterns = [
     path("signup_done/", views.SignUpConfirmView.as_view(), name="signup_done"),
     path("activate/<str:uidb64>/<str:token>", views.activate_view, name="activate"),
     path("login/", views.CustomLoginView.as_view()),
+    path("login-no-password/", views.PasswordlessCustomLoginView.as_view()),
     path("users/<int:pk>", views.CustomUserUpdateView.as_view(), name="user_update"),
     path(
         "update_profile/<int:pk>",

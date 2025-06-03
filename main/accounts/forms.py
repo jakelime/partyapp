@@ -5,13 +5,14 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Field, Layout, Submit
 from django import forms
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model, password_validation
 from django.contrib.auth.forms import (
     AuthenticationForm,
     UserChangeForm,
     UserCreationForm,
 )
 from django.core import validators
+from django.views.decorators.debug import sensitive_variables
 
 from . import customvalidators
 from .models import CustomUser
@@ -19,13 +20,59 @@ from .models import CustomUser
 UserModel = get_user_model()
 
 
+class PasswordlessCustomUserLoginForm(AuthenticationForm):
+
+    username = forms.CharField(
+        required=True,
+        label="Username or Employee ID",
+    )
+    helper = FormHelper()
+    helper.layout = Layout(
+        FloatingField("username"),
+        FormActions(
+            Submit("submit", "Login", css_class="btn-primary btn-lg"),
+        ),
+    )
+
+    @sensitive_variables()
+    def clean(self):
+        password = self.cleaned_data.get("password")
+        if not password:
+            self.cleaned_data["password"] = settings.DEFAULT_USER_PASSWORD
+        super().clean()
+
+
+class PasswordlessCustomUserCreationForm(UserCreationForm):
+    employee_id = forms.CharField(
+        required=False,
+        label="Employee ID",
+        help_text="Example: 7xxxxxxx (8 characters)",
+    )
+    helper = FormHelper()
+    helper.form_class = "form-horizontal"
+    helper.layout = Layout(
+        FloatingField("employee_id"),
+        FormActions(
+            Submit("submit", "Register as new user", css_class="btn-primary btn-lg"),
+        ),
+    )
+
+    class Meta:
+        model = CustomUser
+        fields = ("employee_id",)
+
+
 class CustomUserLoginForm(AuthenticationForm):
     ## AuthenticationForm inherits NOT from forms.ModelForm! but forms.Form
     username = forms.CharField(
         required=True,
         label="Username or Email",
+        # widget=forms.EmailInput(
+        #     attrs={"placeholder": f"user.name@{settings.[0]}"}
+        # ),
     )
     helper = FormHelper()
+    # helper.form_class = "form-horizontal"
     helper.layout = Layout(
         FloatingField("username"),
         FloatingField("password"),
@@ -39,24 +86,12 @@ class CustomUserCreationForm(UserCreationForm):
     # AuthenticationForm inherits from forms.ModelForm,
     # high level and allows crispy form
     username = forms.CharField(
-        required=True,
-        label="Username",
-        help_text="Example: john.doe. Lowercase letters, digits and _ only.",
-        validators=[
-            validators.RegexValidator(
-                regex=r"^[a-z0-9_]+$",  # lowercase only
-                message="Lowercase letters, digits and _ only! e.g. john.doe",
-                code="invalid_username",
-            ),
-            validators.MinLengthValidator(
-                4, "Username must be at least 4 characters long."
-            ),
-            customvalidators.validate_username_not_reserved,
-            customvalidators.validate_username_unique,
-        ],
+        required=True, label="Username", help_text="Example: john.doe"
     )
     email = forms.EmailField(
-        required=True, label="Email", help_text="Example: john.doe@email.com"
+        required=True,
+        label="Email",
+        help_text="Example: user.name@email.com",
     )
     helper = FormHelper()
     helper.form_class = "form-horizontal"
@@ -73,6 +108,21 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = ("username", "email", "password1", "password2")
+
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+        email_username, email_domain = email.split("@")
+        return email
+
+    def clean(self) -> dict:
+        cleaned_data = super().clean()
+        username = self.cleaned_data["username"]
+        if UserModel.objects.filter(username=username).exists():
+            username, _ = cleaned_data["email"].split("@")
+        if UserModel.objects.filter(username=username).exists():
+            username = f"{username}_{get_datetime_str()}"
+        cleaned_data["username"] = username
+        return cleaned_data
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -113,6 +163,9 @@ class CustomUserChangeForm(UserChangeForm):
         username = self.fields.get("username")
         if username:
             username.disabled = True
+        email_is_verified = self.fields.get("email_is_verified")
+        if email_is_verified:
+            email_is_verified.disabled = True
         email = self.fields.get("email")
         if email:
             email.help_text = "Email id must be same as username!"

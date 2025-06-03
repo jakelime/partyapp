@@ -21,6 +21,7 @@ from .forms import (
     CustomUserCreationForm,
     CustomUserLoginForm,
     CustomUserProfileForm,
+    PasswordlessCustomUserLoginForm,
 )
 from .models import CustomUser
 from .tokens import account_activation_token
@@ -80,6 +81,12 @@ class SignUpConfirmView(TemplateView):
 
 class CustomLoginView(LoginView):
     authentication_form = CustomUserLoginForm
+
+
+class PasswordlessCustomLoginView(LoginView):
+    form_class = PasswordlessCustomUserLoginForm
+    authentication_form = PasswordlessCustomUserLoginForm
+    template_name = "registration/login-no-password.html"
 
 
 class CustomUserListView(LoginRequiredMixin, ListView):
