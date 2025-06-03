@@ -62,7 +62,7 @@
       <h1 class="display-5 fw-bold">Know-Your-Durian</h1>
       <p class="col-md-8 text-justify">From Mao Shan Wang to D24, an expert or just curious? Test your knowledge, learn fascinating facts, and discover the rich world of durians. Become a true connoisseur!</p>
       <p class="col-md-8 text-justify">Click "Access" for the ultimate knowledge test!</p>
-      <form action="">
+      <form action="{% url 'knowledge:home' %}">
         <input class="btn btn-primary btn-lg" type="submit" value="Access" />
       </form>
     </div>
@@ -74,7 +74,7 @@
         <h2>Lucky Draw</h2>
         <p>Feeling lucky? Enter our draw for a chance to win exciting prizes!</p>
         <p>Click "Access" to participate.</p>
-        <form action="">
+        <form action="knowledge:home">
           <input class="btn btn-outline-secondary" type="submit" value="Access" />
         </form>
       </div>
