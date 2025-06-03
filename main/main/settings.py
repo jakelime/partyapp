@@ -155,7 +155,6 @@ DATABASES = {
         "NAME": SQLITE_DB_PATH,
     }
 }
-# TODO: ignore `app_local_tmp`, and add employee_data there
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

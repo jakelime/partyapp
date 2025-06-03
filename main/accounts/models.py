@@ -36,8 +36,8 @@ class CustomUser(AbstractUser):
         null=True,
         # related_name="%(app_label)s_%(class)s_emp_id_obj",
     )
-
     email = models.EmailField(blank=True, null=True, unique=True)
+    is_no_password = models.BooleanField(default=False)
 
     class Meta:
         permissions = (

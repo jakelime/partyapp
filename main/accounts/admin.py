@@ -22,6 +22,7 @@ class CustomUserAdmin(UserAdmin):
                     "emp_id_obj",
                     "email",
                     "password",
+                    "is_no_password",
                 )
             },
         ),
