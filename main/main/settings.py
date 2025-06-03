@@ -103,7 +103,7 @@ INSTALLED_APPS = [
     "django_select2",
     # our apps
     "accounts",
-    "durian",
+    "knowledge",
     "bingo",
     "obstacle",
     "controls",

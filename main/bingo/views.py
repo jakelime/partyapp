@@ -3,7 +3,6 @@ import logging
 
 from django.views.generic.base import TemplateView
 
-# from main.custom_mixin import CustomLoginRequiredMixin
 from main.custom_mixin import PasswordlessLoginRequiredMixin
 
 lg = logging.getLogger("django")
