@@ -182,9 +182,7 @@ LOGOUT_REDIRECT_URL = "landingpage"
 AUTHENTICATION_BACKENDS = ["accounts.backends.CustomBackend"]
 # AUTHENTICATION_BACKENDS = ["accounts.backends.NoPasswordBackend"]
 EMAIL_FAIL_SILENTLY = True
-DEFAULT_USER_PASSWORD = os.environ.get(
-    "DJANGO_DEFAULT_USER_PASSWORD", r"z7SYNT6&xqx$axQzM!JJ&x"
-)
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@company.net")
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 LANGUAGE_CODE = "en-us"
