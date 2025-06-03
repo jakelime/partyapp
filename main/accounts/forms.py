@@ -5,22 +5,22 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Field, Layout, Submit
 from django import forms
 from django.conf import settings
-from django.contrib.auth import authenticate, get_user_model, password_validation
+from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import (
     AuthenticationForm,
     UserChangeForm,
     UserCreationForm,
 )
-from django.core import validators
 from django.views.decorators.debug import sensitive_variables
+from employees import models as employees_models
 
-from . import customvalidators
-from .models import CustomUser
+from accounts import models as accounts_models
+from main.utils import get_datetime_str
 
 UserModel = get_user_model()
 
 
-class PasswordlessCustomUserLoginForm(AuthenticationForm):
+class CustomUserLoginFormNopassword(AuthenticationForm):
 
     username = forms.CharField(
         required=True,
@@ -42,7 +42,7 @@ class PasswordlessCustomUserLoginForm(AuthenticationForm):
         super().clean()
 
 
-class PasswordlessCustomUserCreationForm(UserCreationForm):
+class CustomUserCreationFormNopassword(forms.ModelForm):
     employee_id = forms.CharField(
         required=False,
         label="Employee ID",
@@ -58,8 +58,20 @@ class PasswordlessCustomUserCreationForm(UserCreationForm):
     )
 
     class Meta:
-        model = CustomUser
+        model = accounts_models.CustomUser
         fields = ("employee_id",)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        employee_id = cleaned_data.get("employee_id")
+        emp_obj = employees_models.EmployeeModel.objects.filter(
+            employee_id=employee_id
+        ).first()
+        if not emp_obj:
+            raise forms.ValidationError(
+                f"Employee with ID {employee_id} does not exist!"
+            )
+        return cleaned_data
 
 
 class CustomUserLoginForm(AuthenticationForm):
@@ -106,7 +118,7 @@ class CustomUserCreationForm(UserCreationForm):
     )
 
     class Meta:
-        model = CustomUser
+        model = accounts_models.CustomUser
         fields = ("username", "email", "password1", "password2")
 
     def clean_email(self):
@@ -146,7 +158,7 @@ class CustomUserChangeForm(UserChangeForm):
     )
 
     class Meta:
-        model = CustomUser
+        model = accounts_models.CustomUser
         fields = (
             "username",
             "email",
@@ -186,7 +198,7 @@ class CustomUserProfileForm(UserChangeForm):
     )
 
     class Meta:
-        model = CustomUser
+        model = accounts_models.CustomUser
         fields = ("email", "username", "preferred_name", "first_name", "last_name")
 
     def __init__(self, *args, **kwargs):

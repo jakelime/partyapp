@@ -30,8 +30,13 @@ class CustomUser(AbstractUser):
     last_name = models.CharField(blank=True, max_length=32)
     preferred_name = models.CharField(blank=True, max_length=64)
     username = models.CharField(max_length=32, blank=True, null=True, unique=True)
-    # 700xxxxx, 8chars
-    employee_id = models.CharField(max_length=12, blank=True, null=True, unique=True)
+    emp_id_obj = models.ForeignKey(
+        "employees.EmployeeModel",
+        on_delete=models.SET_NULL,
+        null=True,
+        # related_name="%(app_label)s_%(class)s_emp_id_obj",
+    )
+
     email = models.EmailField(blank=True, null=True, unique=True)
 
     class Meta:
@@ -41,6 +46,8 @@ class CustomUser(AbstractUser):
         )
 
     def __str__(self):
+        if self.username is None:
+            return f"none-{self.pk}"
         return self.username
 
     def save(self, *args, **kwargs):

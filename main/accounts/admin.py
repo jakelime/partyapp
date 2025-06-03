@@ -12,13 +12,14 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser
-    list_display = ["username", "email", "date_joined", "preferred_name"]
+    list_display = ["username", "emp_id_obj", "date_joined", "preferred_name", "email"]
     fieldsets = (
         (
             gettext_lazy("Security"),
             {
                 "fields": (
                     "username",
+                    "emp_id_obj",
                     "email",
                     "password",
                 )
