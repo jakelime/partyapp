@@ -144,6 +144,7 @@ class CustomUserCreationFormNopassword(forms.ModelForm):
         fields = ("employee_id",)
 
     def clean(self):
+        """this method will check if employee_id exists in EmployeeModel"""
         cleaned_data = super().clean()
         employee_id = cleaned_data.get("employee_id")
         emp_obj = employees_models.EmployeeModel.objects.filter(
@@ -152,6 +153,11 @@ class CustomUserCreationFormNopassword(forms.ModelForm):
         if not emp_obj:
             raise forms.ValidationError(
                 f"Employee with ID {employee_id} does not exist!"
+            )
+        user = UserModel.objects.filter(emp_id_obj=emp_obj).first()
+        if user:
+            raise forms.ValidationError(
+                f"User with Employee ID {employee_id} already exists!"
             )
         return cleaned_data
 

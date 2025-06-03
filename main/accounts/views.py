@@ -19,7 +19,7 @@ from employees import models as employees_models
 
 from accounts import forms as accounts_forms
 from accounts.tokens import account_activation_token
-
+from main.utils import generate_random_email
 
 UserModel = get_user_model()
 
@@ -53,23 +53,16 @@ class SignUpViewNopassword(CreateView):
         emp_obj = employees_models.EmployeeModel.objects.filter(
             employee_id=employee_id
         ).first()
-        # TODO: Figure out why a "blank" username is always created
-        # Maybe change get_or_create to filter, then create?
-        user, created = UserModel.objects.get_or_create(
-            username=str(employee_id),
-        )
-        if created:
+        user = UserModel.objects.filter(username=str(employee_id)).first()
+        if not user:
+            user = form.save(commit=False)
+            user.username = str(employee_id)
             user.emp_id_obj = emp_obj
-            user.password1 = settings.DEFAULT_USER_PASSWORD
-            user.password2 = settings.DEFAULT_USER_PASSWORD
-            user.email = f"{employee_id}@stenggdummy.com"
+            user.email = generate_random_email(name=employee_id)
             user.is_active = True
             user.is_no_password = True
+            user.preferred_name = emp_obj.name
             user.save()
-        # TODO: validate if this solves the above problem
-        form.cleaned_data["username"] = employee_id
-        print(f"{form=}")
-        print(f"{form.cleaned_data=}")
         return super().form_valid(form)
 
     def form_invalid(self, form):

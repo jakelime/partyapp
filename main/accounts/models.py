@@ -48,7 +48,8 @@ class CustomUser(AbstractUser):
     def __str__(self):
         if self.username is None:
             return f"none-{self.pk}"
-        return self.username
+        else:
+            return str(self.emp_id_obj)
 
     def save(self, *args, **kwargs):
         return super().save(*args, **kwargs)

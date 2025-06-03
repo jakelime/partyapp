@@ -1,4 +1,5 @@
 import logging
+import random
 import re
 import secrets
 import shutil
@@ -8,7 +9,83 @@ import uuid
 from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
+from typing import Optional
+
 from natsort import natsort_keygen
+
+CHARACTERS = string.ascii_lowercase + string.digits
+WORD_LIST = [
+    "apple",
+    "banana",
+    "cherry",
+    "date",
+    "elderberry",
+    "fig",
+    "grape",
+    "kiwi",
+    "lemon",
+    "mango",
+    "nectarine",
+    "orange",
+    "papaya",
+    "quince",
+    "raspberry",
+    "strawberry",
+    "tangerine",
+    "ugli",
+    "vanilla",
+    "watermelon",
+    "xigua",
+    "yuzu",
+    "zucchini",
+    "art",
+    "ball",
+    "cat",
+    "dog",
+    "eat",
+    "fly",
+    "go",
+    "help",
+    "ink",
+    "jump",
+    "kite",
+    "love",
+    "moon",
+    "nest",
+    "open",
+    "play",
+    "quiet",
+    "run",
+    "sing",
+    "talk",
+    "use",
+    "view",
+    "walk",
+    "yell",
+    "zip",
+    "blue",
+    "green",
+    "red",
+    "yellow",
+    "fast",
+    "slow",
+    "big",
+    "small",
+    "happy",
+    "sad",
+    "bright",
+    "dark",
+    "cloud",
+    "sun",
+    "star",
+    "tree",
+    "flower",
+    "ocean",
+    "river",
+    "mountain",
+    "valley",
+]
+
 
 lg = logging.getLogger("django")
 
@@ -130,6 +207,15 @@ def get_job_creation_confidence_level(msg):
 
 def get_version():
     return DjangoVersionManager().get_app_version()
+
+
+def generate_random_email(name: Optional[str] = None) -> str:
+    if not name:
+        name = f"{random.choice(WORD_LIST)}-{''.join(random.choices(CHARACTERS, k=6))}"
+    domain_suffixes = [".com", ".net", ".org", ".edu", ".gov"]
+    domain_name = random.choice(WORD_LIST)
+    domain_suffix = random.choice(domain_suffixes)
+    return f"{name}@{domain_name}{domain_suffix}"
 
 
 class VersionManager:
