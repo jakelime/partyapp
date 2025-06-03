@@ -51,7 +51,7 @@ class EmployeeDataParser:
         df[EMPLOYEE_NAME_COLUMN] = df[EMPLOYEE_NAME_COLUMN].astype(str).str.strip()
         self.df = df
 
-    def load_to_db(self) -> None:
+    def load_to_db(self, debug: bool = False) -> None:
         if self.df is None:
             raise ValueError("DataFrame is not initialized. Call parse_csv() first.")
         for _, row in self.df.iterrows():
@@ -65,9 +65,10 @@ class EmployeeDataParser:
                     self.cmd.style.SUCCESS(f"{emp} saved to database.")
                 )
             else:
-                self.cmd.stdout.write(
-                    f"{emp} already exists in the database, skipping creation."
-                )
+                if debug:
+                    self.cmd.stdout.write(
+                        f"{emp} already exists in the database, skipping creation."
+                    )
 
 
 class Command(BaseCommand):

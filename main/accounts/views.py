@@ -4,8 +4,10 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
-from django.shortcuts import render
+from django.http import HttpResponseRedirect, QueryDict
+from django.shortcuts import render, resolve_url
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.utils.encoding import force_bytes, force_str
@@ -13,11 +15,11 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.list import ListView
+from employees import models as employees_models
 
 from accounts import forms as accounts_forms
-from accounts.models import CustomUser
+from accounts import models as accounts_model
 from accounts.tokens import account_activation_token
-from employees import models as employees_models
 
 
 def activate_view(request, uidb64, token):
@@ -45,24 +47,23 @@ class SignUpViewNopassword(CreateView):
     template_name = "registration/signup-nopassword.html"
 
     def form_valid(self, form):
+
         employee_id = form.cleaned_data.get("employee_id")
-        # user_ = form.save(commit=False)
-        # employee_id = user_.employee_id
-        # print(f"{user_.employee_id=}")
         emp_obj = employees_models.EmployeeModel.objects.filter(
             employee_id=employee_id
         ).first()
-        user = employees_models.EmployeeModel.objects.get_or_create(
+        user, created = accounts_model.CustomUser.objects.get_or_create(
             username=str(employee_id),
-            employee_id=employee_id,
         )
-        user.emp_id_obj = emp_obj
-        user.password1 = settings.DEFAULT_USER_PASSWORD
-        user.password2 = settings.DEFAULT_USER_PASSWORD
-        user.email = f"{employee_id}@stenggdummy.com"
-        user.save()
-        user.is_active = True
-        user.save()
+        if created:
+            user.emp_id_obj = emp_obj
+            user.password1 = settings.DEFAULT_USER_PASSWORD
+            user.password2 = settings.DEFAULT_USER_PASSWORD
+            user.email = f"{employee_id}@stenggdummy.com"
+            user.is_active = True
+            user.save()
+
+        print(f"{form=}")
         return super().form_valid(form)
 
     def form_invalid(self, form):
@@ -120,14 +121,107 @@ class CustomLoginView(LoginView):
     authentication_form = accounts_forms.CustomUserLoginForm
 
 
+# class CustomLoginRedirectNopassword(LoginView):
+#     """
+#     Display the login form and handle the login action.
+#     """
+
+#     form_class = AuthenticationForm
+#     authentication_form = None
+#     template_name = "registration/login.html"
+#     redirect_authenticated_user = False
+#     extra_context = None
+
+#     @method_decorator(sensitive_post_parameters())
+#     @method_decorator(csrf_protect)
+#     @method_decorator(never_cache)
+#     def dispatch(self, request, *args, **kwargs):
+#         if self.redirect_authenticated_user and self.request.user.is_authenticated:
+#             redirect_to = self.get_success_url()
+#             if redirect_to == self.request.path:
+#                 raise ValueError(
+#                     "Redirection loop for authenticated user detected. Check that "
+#                     "your LOGIN_REDIRECT_URL doesn't point to a login page."
+#                 )
+#             return HttpResponseRedirect(redirect_to)
+#         return super().dispatch(request, *args, **kwargs)
+
+#     def get_default_redirect_url(self):
+#         """Return the default redirect URL."""
+#         if self.next_page:
+#             return resolve_url(self.next_page)
+#         else:
+#             return resolve_url(settings.LOGIN_REDIRECT_URL)
+
+#     def get_form_class(self):
+#         return self.authentication_form or self.form_class
+
+#     def get_form_kwargs(self):
+#         kwargs = super().get_form_kwargs()
+#         kwargs["request"] = self.request
+#         return kwargs
+
+#     def form_valid(self, form):
+#         """Security check complete. Log the user in."""
+#         auth_login(self.request, form.get_user())
+#         return HttpResponseRedirect(self.get_success_url())
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         current_site = get_current_site(self.request)
+#         context.update(
+#             {
+#                 self.redirect_field_name: self.get_redirect_url(),
+#                 "site": current_site,
+#                 "site_name": current_site.name,
+#                 **(self.extra_context or {}),
+#             }
+#         )
+#         return context
+
+
 class CustomLoginViewNopassword(LoginView):
     form_class = accounts_forms.CustomUserLoginFormNopassword
     authentication_form = accounts_forms.CustomUserLoginFormNopassword
     template_name = "registration/login-no-password.html"
 
+    def get_default_redirect_url(self):
+        """Return the default redirect URL."""
+        if self.next_page:
+            return resolve_url(self.next_page)
+        else:
+            return resolve_url(settings.LOGIN_REDIRECT_URL)
+
+    def get_form_class(self):
+        return self.authentication_form or self.form_class
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
+
+    def form_valid(self, form):
+        """Security check complete. Log the user in."""
+        print(f"{form=}")
+        # auth_login(self.request, form.get_user())
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        current_site = get_current_site(self.request)
+        context.update(
+            {
+                self.redirect_field_name: self.get_redirect_url(),
+                "site": current_site,
+                "site_name": current_site.name,
+                **(self.extra_context or {}),
+            }
+        )
+        return context
+
 
 class CustomUserListView(LoginRequiredMixin, ListView):
-    model = CustomUser
+    model = accounts_model.CustomUser
     template_name = "accounts/users_list.html"
     context_object_name = "objects"
 
@@ -151,7 +245,7 @@ class CustomUserListView(LoginRequiredMixin, ListView):
 
 
 class CustomUserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
-    model = CustomUser
+    model = accounts_model.CustomUser
     form_class = accounts_forms.CustomUserChangeForm
     template_name = "accounts/update_user.html"
     context_object_name = "objects"
@@ -164,7 +258,7 @@ class CustomUserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVi
 
 
 class CustomUserProfileUpdateView(LoginRequiredMixin, UpdateView):
-    model = CustomUser
+    model = accounts_model.CustomUser
     form_class = accounts_forms.CustomUserProfileForm
     template_name = "accounts/user_profile.html"
     context_object_name = "objects"

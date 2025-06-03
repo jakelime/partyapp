@@ -39,6 +39,7 @@ class CustomUserLoginFormNopassword(AuthenticationForm):
         password = self.cleaned_data.get("password")
         if not password:
             self.cleaned_data["password"] = settings.DEFAULT_USER_PASSWORD
+        print(f"{self.cleaned_data=}")
         super().clean()
 
 
