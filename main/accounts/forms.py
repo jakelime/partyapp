@@ -54,11 +54,11 @@ class AuthenticationFormNopassword(forms.Form):
 
     @sensitive_variables()
     def clean(self):
-        self.cleaned_data["password"] = settings.DEFAULT_USER_PASSWORD
         username = self.cleaned_data.get("username")
-        password = self.cleaned_data.get("password")
+        # password = self.cleaned_data.get("password")
 
-        if username is not None and password:
+        # if username is not None and password:
+        if username is not None:
             self.user_cache = UserModel.objects.filter(username=username).first()
             print(f"{self.user_cache=}")
             if not self.user_cache.is_no_password:
@@ -280,11 +280,9 @@ class CustomUserProfileForm(UserChangeForm):
     helper = FormHelper()
     helper.form_class = "form-horizontal"
     helper.layout = Layout(
-        Field("email"),
         Field("username"),
         Field("preferred_name"),
-        Field("first_name"),
-        Field("last_name"),
+        Field("email"),
         FormActions(
             Submit("submit", "Save", css_class="btn-primary btn-lg"),
         ),
@@ -292,10 +290,13 @@ class CustomUserProfileForm(UserChangeForm):
 
     class Meta:
         model = accounts_models.CustomUser
-        fields = ("email", "username", "preferred_name", "first_name", "last_name")
+        fields = ("email", "username", "preferred_name")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         username = self.fields.get("username")
         if username:
             username.disabled = True
+        name = self.fields.get("preferred_name")
+        if name:
+            name.disabled = True
