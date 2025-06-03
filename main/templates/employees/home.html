@@ -1,0 +1,24 @@
+{% extends 'employees/base.html' %}
+{% load render_table from django_tables2 %}
+{% load crispy_forms_tags %}
+{% load django_bootstrap5 %}
+{% block content %}
+  <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="row pt-4 pb-2">
+      <h1>Home Page Template</h1>
+      <div class="row col-lg-10 pt-4">
+        {% if messages %}
+          {% for message in messages %}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+              <div class="alert alert-danger" role="alert">{{ message }}</div>
+            {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+              <div class="alert alert-success" role="alert">{{ message }}</div>
+            {% else %}
+              <div class="alert alert-info" role="alert">{{ message }}</div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+  </main>
+{% endblock %}

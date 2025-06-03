@@ -107,6 +107,7 @@ INSTALLED_APPS = [
     "bingo",
     "obstacle",
     "controls",
+    "employees",
 ]
 
 MIDDLEWARE = [

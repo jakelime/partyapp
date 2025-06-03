@@ -1,0 +1,28 @@
+{% extends 'employees/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-4">
+    <div class="row col-lg-10 pt-4">
+      {% if messages %}
+        {% for message in messages %}
+          {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+            <div class="alert alert-danger" role="alert">{{ message }}</div>
+          {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+            <div class="alert alert-success" role="alert">{{ message }}</div>
+          {% else %}
+            <div class="alert alert-info" role="alert">{{ message }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
+    <h1>Create</h1>
+    <div class="col-lg-10 pt-4">
+      {% crispy form %}
+    </div>
+  </main>
+
+
+
+{% endblock %}
+
+

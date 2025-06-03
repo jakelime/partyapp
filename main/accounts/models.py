@@ -1,12 +1,8 @@
-from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import EmailValidator
 from django.db import models
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy
-
-from .customvalidators import WhitelistEmailValidator
 
 
 class CustomUserManager(BaseUserManager):
@@ -29,7 +25,6 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
-# TODO: Enable password-less sign ups
 class CustomUser(AbstractUser):
     first_name = models.CharField(blank=True, max_length=32)
     last_name = models.CharField(blank=True, max_length=32)

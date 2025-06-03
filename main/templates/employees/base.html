@@ -1,0 +1,85 @@
+{% load static %}
+{% url 'landingpage' as url_landing %}
+{% url 'employees:home' as url_home %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="author" content="Jake Lim" />
+    <title>Party Controls - Employees</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}" />
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/dashboard.css' %}" rel="stylesheet" />
+    <link href="{% static 'css/custom.css' %}" rel="stylesheet" />
+
+    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+      <a href="{% url 'landingpage' %}"><img src="{% static 'images/logo_bw.png' %}" style="max-height: 55px;" alt="logo" /></a>
+      <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <input class="form-control form-control-dark w-100 rounded-0 border-0" type="text" placeholder="Employees" aria-label="employee_controls" />
+      <div class="navbar-nav">
+        <div class="nav-item text-nowrap">
+          {% if user.is_authenticated %}
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-dark">Logout</button>
+            </form>
+          {% else %}
+            <a class="nav-link px-3" href="{% url 'login' %}?next={{ request.path }}">Login</a>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+          <div class="position-sticky pt-3 sidebar-sticky">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link {% if request.path == url_home %}{% endif %}" href="{{ url_home }}">
+                  <span data-feather="home" class="align-text-bottom"></span>
+                  Home
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+        {% if is_development_env %}
+          <div class="alert alert-danger text-center" role="alert">
+            Warning: This is an <b>DEVELOPMENT</b> environment<br />For testing purposes only. DO NOT use in production.
+          </div>
+        {% endif %}
+
+        {% block content %}
+
+        {% endblock %}
+
+        <div class="container pt-4">
+          <footer class="d-flex flex-wrap justify-content-center align-items-center pt-5 border-top">
+            <p class="text-muted">Developed by {{ INFO_COMPANY_NAME }}</p>
+          </footer>
+          <footer class="d-flex flex-wrap justify-content-center align-items-center">
+            <p class="text-muted">Brought to you by {{ INFO_COMPANY_COMMITTEE }}</p>
+          </footer>
+          <footer class="d-flex flex-wrap justify-content-center align-items-center">
+            <p class="text-muted">{{ INFO_COMPANY_DEPARTMENT }} &copy; 2025</p>
+          </footer>
+          <footer class="d-flex flex-wrap justify-content-center align-items-center pb-5">
+            <p class="text-muted">
+              <i>{{ APP_VERSION }}</i>
+            </p>
+          </footer>
+        </div>
+      </div>
+    </div>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/feather.min.js' %}"></script>
+    <script src="{% static 'js/Chart.min.js' %}"></script>
+    <script src="{% static 'js/dashboard.js' %}"></script>
+  </body>
+</html>
