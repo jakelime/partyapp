@@ -129,7 +129,7 @@ class CustomUserCreationFormNopassword(forms.ModelForm):
     employee_id = forms.CharField(
         required=False,
         label="Employee ID",
-        help_text="Example: 7xxxxxxx (8 characters)",
+        help_text="Example: 71234567 (8 characters)",
     )
     helper = FormHelper()
     helper.form_class = "form-horizontal"
