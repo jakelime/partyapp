@@ -5,7 +5,7 @@ import pandas as pd
 import logging as lg 
 from accounts import models as accounts_models
 
-class winningNumber(models.Model):
+class KnowledgeAnswer(models.Model):
     answer = CharField(null=True,blank=True)
     is_valid = BooleanField(default=True)
 

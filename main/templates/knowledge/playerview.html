@@ -1,0 +1,194 @@
+{% extends 'knowledge/base_mobile.html' %}
+{% load django_bootstrap5 %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>7x7 Button Grid</title>
+<style>
+    .table-container {
+        height: 250px; /* Set the maximum height */
+        overflow-y: auto;   /* Enable vertical scrolling */
+        border: 1px solid #ccc; /* Optional: for visual clarity */
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    th {
+        background-color: #f2f2f2;
+        position: sticky; /* Makes header sticky */
+        top: 0; /* Sticks header to the top of the container */
+        z-index: 1; /* Ensures header is above scrolling content */
+    }
+    /* Styles for the form container */
+    .form-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        max-width: 400px;
+        margin: 0px auto;
+        margin-bottom: 5px; /* Keeps a small gap between form and text block */
+        padding: 30px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+    }
+
+    /* Styles for labels */
+    .form-label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #555;
+    }
+
+    /* Styles for text input fields */
+    .form-input {
+        padding: 12px 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        width: 100%;
+        box-sizing: border-box;
+        transition: border-color 0.3s ease;
+    }
+
+    /* Focus state for input */
+    .form-input:focus {
+        border-color: #007bff;
+        outline: none; /* Remove default outline */
+    }
+
+    /* Styles for the submit button */
+    .form-button {
+        padding: 12px 25px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 17px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.1s ease;
+        align-self: flex-end;
+        margin-top: 10px;
+    }
+
+    /* Hover state for button */
+    .form-button:hover {
+        background-color: #0056b3;
+    }
+
+    /* Active/Click state for button */
+    .form-button:active {
+        transform: scale(0.98);
+    }
+
+    /* Styles for the refresh button (new) */
+    .refresh-button {
+        display: block; /* Make it a block element to take full width and center */
+        margin: 20px auto; /* Center horizontally with margin */
+        padding: 10px 20px;
+        background-color: #6c757d; /* A neutral gray */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .refresh-button:hover {
+        background-color: #5a6268;
+    }
+
+    /* New style for the text block */
+    .info-text {
+        text-align: center;
+        margin: 15px auto; /* Add margin above and below */
+        max-width: 400px;
+        font-size: 1.1em;
+        color: #666;
+        line-height: 1.5;
+    }
+</style>
+</head>
+<body>
+    <form method="post" class="form-container">
+        {% csrf_token %} {# IMPORTANT: Always include for POST forms in Django #}
+        <label for="ansTextField" class="form-label">
+            Enter Your Answer:
+        </label>
+
+        <input type="text" id="ansTextField" name="ans_text" placeholder="Type your answer here..." class="form-input">
+
+        <button type="submit" class="form-button">
+            Submit
+        </button>
+    </form>
+
+    {# --- NEW TEXT BLOCK HERE --- #}
+    <p class="info-text">
+    Submitted Answer: {{ans}}
+    </p>
+    {# --- END NEW TEXT BLOCK --- #}
+
+    <div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Header 1</th>
+                <th>Header 2</th>
+                <th>Header 3</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Row 1, Cell 1</td>
+                <td>Row 1, Cell 2</td>
+                <td>Row 1, Cell 3</td>
+            </tr>
+            <tr>
+                <td>Row 2, Cell 1</td>
+                <td>Row 2, Cell 2</td>
+                <td>Row 2, Cell 3</td>
+            </tr>
+            <tr>
+                <td>Row 3, Cell 1</td>
+                <td>Row 3, Cell 2</td>
+                <td>Row 3, Cell 3</td>
+            </tr>
+            <tr>
+                <td>Row 3, Cell 1</td>
+                <td>Row 3, Cell 2</td>
+                <td>Row 3, Cell 3</td>
+            </tr>
+            <tr>
+                <td>Row 3, Cell 1</td>
+                <td>Row 3, Cell 2</td>
+                <td>Row 3, Cell 3</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+    {# --- Refresh Page Button --- #}
+    <button type="button" class="refresh-button" onclick="location.reload();">
+        Refresh Page
+    </button>
+    {# --- End Refresh Page Button --- #}
+
+</body>
+</html>
+{% endblock %}

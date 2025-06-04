@@ -1,0 +1,109 @@
+{% load static %}
+{% load django_bootstrap5 %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My App{% endblock title %}</title> {# Allows child templates to set their own page title #}
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}" />
+    <style>
+        /* Base Body Styles */
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column; /* Stacks navbar and main content vertically */
+            min-height: 100vh; /* Ensures the body takes at least the full viewport height */
+            background-color: #f0f0f0;
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+        }
+
+        /* --- Navbar Styles --- */
+        .navbar {
+            background-color: #343a40; /* Dark background for navbar */
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; /* Align items to the start by default */
+            position: sticky; /* Makes navbar stay at the top when scrolling */
+            top: 0;
+            z-index: 1000; /* Ensures navbar is above other content */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Subtle shadow for depth */
+            height: 60px; /* Fixed height for the navbar */
+            box-sizing: border-box; /* Ensures padding is included in the 60px height */
+            width: 100%; /* Ensure navbar takes full width */
+        }
+
+        .navbar-back {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 10px 0 0; /* Add padding to the right for spacing from title */
+            display: flex; /* For centering arrow and text */
+            align-items: center;
+            gap: 5px; /* Space between arrow and "Back" text */
+        }
+
+        .navbar-back:hover {
+            opacity: 0.8;
+        }
+
+        .navbar-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            flex-grow: 1; /* Allows title to take up remaining space */
+            text-align: center; /* Center the title within its flexible space */
+        }
+
+        /* --- Main Content Area Styles --- */
+        .main-content-area {
+            flex-grow: 1; /* This is crucial: allows content to fill remaining vertical space */
+            width: 100%; /* Take full width of its parent (body) */
+            max-width: 600px; /* Limit content width on larger screens */
+            margin: 0 auto; /* Center the content horizontally on larger screens */
+            margin-top: 5px; /* <-- KEY CHANGE: Push the entire content area down by navbar height */
+            padding: 20px 10px; /* Internal padding for the content within this area */
+            box-sizing: border-box;
+            /* If you want THIS AREA to be scrollable if its content overflows, keep overflow-y: auto */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* --- Media Queries for Navbar Font Size --- */
+        @media (max-width: 480px) {
+            .navbar-title {
+                font-size: 1.3rem; /* Slightly smaller title on mobile */
+            }
+        }
+        @media (max-width: 320px) {
+             .navbar-title {
+                font-size: 1.1rem; /* Even smaller title on very small screens */
+            }
+            .navbar-back {
+                font-size: 1rem; /* Adjust back button font for tiny screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <button class="navbar-back" onclick=history.back()>
+            <span data-feather="home" style="width:40px; height:40px;"></span>
+            Back
+        </button>
+        <div class="navbar-title"></div>
+    </div>
+
+    {# IMPORTANT: This div correctly has the class "main-content-area" #}
+    <div class="main-content-area">
+        {% block content %}
+        {# Page-specific content will be inserted here by child templates #}
+        {% endblock content %}
+    </div>
+</body>
+<script src="{% static 'js/feather.min.js' %}"></script>
+</html>
