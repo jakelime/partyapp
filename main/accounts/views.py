@@ -1,8 +1,9 @@
 # main/accounts/views.py
+from bingo import models as bingo_models
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.core.mail import EmailMessage
 from django.shortcuts import render
@@ -14,11 +15,11 @@ from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.list import ListView
 from employees import models as employees_models
-from bingo import models as bingo_models
+from main.custom_mixin import CustomLoginRequiredMixin
+from main.utils import generate_random_email
 
 from accounts import forms as accounts_forms
 from accounts.tokens import account_activation_token
-from main.utils import generate_random_email
 
 UserModel = get_user_model()
 
@@ -129,7 +130,7 @@ class CustomLoginViewNopassword(LoginView):
     template_name = "registration/login-no-password.html"
 
 
-class CustomUserListView(LoginRequiredMixin, ListView):
+class CustomUserListView(CustomLoginRequiredMixin, ListView):
     model = UserModel
     template_name = "accounts/users_list.html"
     context_object_name = "objects"
@@ -153,7 +154,9 @@ class CustomUserListView(LoginRequiredMixin, ListView):
         return context
 
 
-class CustomUserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+class CustomUserUpdateView(
+    CustomLoginRequiredMixin, PermissionRequiredMixin, UpdateView
+):
     model = UserModel
     form_class = accounts_forms.CustomUserChangeForm
     template_name = "accounts/update_user.html"
@@ -166,7 +169,7 @@ class CustomUserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVi
         return context
 
 
-class CustomUserProfileUpdateView(LoginRequiredMixin, UpdateView):
+class CustomUserProfileUpdateView(CustomLoginRequiredMixin, UpdateView):
     model = UserModel
     form_class = accounts_forms.CustomUserProfileForm
     template_name = "accounts/user_profile.html"

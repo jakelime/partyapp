@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import logging
 import os
 from pathlib import Path
-from subprocess import CalledProcessError
+
 from dotenv import load_dotenv
 
 from main.utils import DjangoVersionManager, convert_str_to_bool
@@ -83,7 +83,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = convert_str_to_bool(os.environ.get("DJANGO_DEBUG", "false"))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost"]
 
 
 # Application definition
@@ -148,7 +148,19 @@ IS_DEVELOPMENT_ENV = convert_str_to_bool(os.environ.get("IS_DEVELOPMENT_ENV", "f
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 SQLITE_DB_PATH = APP_LOCAL_TEMP_DIR / "database" / "db.sqlite3"
+USER_SPECIFIED_DB_PATH = os.environ.get("SQLITE_DB_PATH", "")
+if USER_SPECIFIED_DB_PATH:
+    db_path = Path(USER_SPECIFIED_DB_PATH)
+    match db_path.suffix:
+        case ".sqlite3" | ".db":
+            SQLITE_DB_PATH = db_path.resolve()
+        case _:
+            if not db_path.is_dir():
+                db_path.mkdir(parents=True, exist_ok=True)
+            SQLITE_DB_PATH = db_path / "db.sqlite3"
 SQLITE_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
