@@ -194,10 +194,10 @@ SHORT_DATETIME_FORMAT = "Y-m-d HM"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-STATIC_URL = os.environ.get("DJANGO_STATIC_URL", "static/")
+STATIC_URL = os.environ.get("DJANGO_STATIC_URL", "/static/")
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = os.environ.get("DJANGO_STATIC_ROOT", "")
-MEDIA_URL = os.environ.get("DJANGO_MEDIA_URL", "media/")
+MEDIA_URL = os.environ.get("DJANGO_MEDIA_URL", "/media/")
 MEDIA_ROOT = os.environ.get("DJANGO_MEDIA_ROOT", "")
 
 
@@ -224,5 +224,8 @@ INFO_COMPANY_COMMITTEE = os.environ.get(
 
 
 # Handles Reverse proxy routing
-FORCE_SCRIPT_NAME = "/durianparty"
+FORCE_SCRIPT_NAME = "/durianparty" 
+LOGIN_REDIRECT_URL = f"{FORCE_SCRIPT_NAME}/" # this will override previous
 USE_X_FORWARDED_HOST = True
+MEDIA_URL = "/media/" # override to be NOT relative to FORCE_SCRIPT_NAME
+STATIC_URL = "/static/" # override to be NOT relative to FORCE_SCRIPT_NAME
