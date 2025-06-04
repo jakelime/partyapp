@@ -80,6 +80,27 @@ class PlayerView(LoginRequiredMixinNopassword, TemplateView):
         return context
     
 
+class WinningNumbersView(LoginRequiredMixinNopassword, TemplateView):
+    template_name = "bingo/projector.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get the 7 latest winning numbers
+        latest_winning_numbers = winningNumber.objects.all()[:7]
+
+        # Put them into context as num1, num2, ..., num7
+        for i, winning_number_obj in enumerate(latest_winning_numbers):
+            context[f'num{i+1}'] = winning_number_obj.num
+
+        # Optional: If you want to handle cases where there are less than 7 numbers
+        # for i in range(len(latest_winning_numbers), 7):
+        #     context[f'num{i+1}'] = None # Or some default value like 0 or an empty string
+
+        # print("Context data:", context) # For debugging, check your server console
+
+        return context
+
 class GameMasterView(TemplateView):
     template_name = "bingo/gmview.html"
 
@@ -94,6 +115,7 @@ class GameMasterView(TemplateView):
         context['winners'] = winners
         context['num_winners'] = len(winners)
         context['num_players'] = accounts_models.CustomUser.objects.all().count()
+        context['num_drawn'] = len(list(winningNumber.objects.values_list('num', flat=True)))
 
         print(f"GET Request - Period: {context['period']}, Toggle State: {context['toggle_state']}")
         return context

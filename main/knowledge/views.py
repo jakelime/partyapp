@@ -14,3 +14,6 @@ class HomeView(LoginRequiredMixinNopassword, TemplateView):
 
 class SubmitAnswerView(LoginRequiredMixinNopassword, TemplateView):
     template_name = "knowledge/playerview.html"
+
+    def post(self, request, *args, **kwargs):
+        print(self.request.POST)

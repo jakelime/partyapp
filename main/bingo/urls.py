@@ -14,4 +14,5 @@ urlpatterns = [
     name='game_master_with_params'
     ),
     path("settings", views.SettingsView.as_view(), name="settings"),
+    path("winningnumbers", views.WinningNumbersView.as_view(), name="winningnumbers")
 ]

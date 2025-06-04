@@ -128,7 +128,7 @@
     <form method="post" class="form-container">
         {% csrf_token %} {# IMPORTANT: Always include for POST forms in Django #}
         <label for="ansTextField" class="form-label">
-            Enter Your Answer:
+            {{ Question }}
         </label>
 
         <input type="text" id="ansTextField" name="ans_text" placeholder="Type your answer here..." class="form-input">

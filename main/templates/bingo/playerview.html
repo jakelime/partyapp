@@ -16,7 +16,7 @@
 
         .accordion-header {
             background-color: #f1f1f1;
-            height: 30px;
+            height: 15px;
             color: #333;
             padding: 35px;
             cursor: pointer;
@@ -25,7 +25,7 @@
             align-items: center;
             font-weight: bold;
             border-bottom: 1px solid #ddd;
-            font-size: clamp(1.5rem, 4vw, 3rem); /* This will scale font size */
+            font-size: clamp(0.8rem, 4vw, 2rem); /* This will scale font size */
         }
 
         .accordion-header:hover {
@@ -37,11 +37,20 @@
         }
 
         .accordion-content {
-            padding: 0 15px;
+            /* Initial state to show first row (6 items) */
+            padding: 15px; /* Default padding for content */
+            max-height: 50px; /* Approximate height for the first 6 numbers */
             background-color: white;
-            max-height: 0; /* Initially hidden */
-            overflow: hidden;
-            transition: max-height 0.3s ease-out, padding 0.3s ease-out; /* Smooth transition */
+            overflow: hidden; /* Hide overflow initially */
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            overflow-y: auto; /* Enable scrolling if content overflows */
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #00796b #f1f1f1;
+        }
+
+        .accordion-content.expanded { /* Renamed 'show' to 'expanded' for clarity */
+            max-height: 400px; /* Expanded height, make this large enough to show all content */
         }
 
         .accordion-content.show {
@@ -261,26 +270,39 @@
             });
         });
        
-       document.addEventListener('DOMContentLoaded', function() {
-            const accordionHeaders = document.querySelectorAll('.accordion-header');
+    document.addEventListener('DOMContentLoaded', function() {
+    const accordionHeaders = document.querySelectorAll('.accordion-header');
 
-            accordionHeaders.forEach(header => {
+    accordionHeaders.forEach(header => {
+        const content = header.nextElementSibling;
+        // Initially, if the content is overflowed, we need to show the arrow
+        // and allow expansion.
+        // A simple check might be to see if there are more than 6 numbers.
+        // If less than or equal to 6 numbers, perhaps no accordion behavior is needed.
+        const numberOfItems = content.querySelectorAll('.number-item').length;
+        if (numberOfItems <= 6) {
+            // If there are 6 or fewer items, the accordion header should not be a pointer
+            // and the arrow should be hidden as there's nothing to expand.
+            header.style.cursor = 'default';
+            header.querySelector('.arrow').style.display = 'none';
+            content.style.overflowY = 'hidden'; // No need for scrollbar
+        } else {
+            // If more than 6 items, set up the click listener
             header.addEventListener('click', function() {
-                // Toggle the 'active' class on the header
                 this.classList.toggle('active');
-
-                // Select the content sibling
-                const content = this.nextElementSibling;
-
-                // Toggle the 'show' class on the content
-                if (content.classList.contains('show')) {
-                content.classList.remove('show');
+                if (content.classList.contains('expanded')) {
+                    content.classList.remove('expanded');
+                    // Reset to initial height when collapsing
+                    content.style.maxHeight = '75px'; // Match the initial max-height
                 } else {
-                content.classList.add('show');
+                    content.classList.add('expanded');
+                    // Set to a large enough height for expansion
+                    content.style.maxHeight = '400px'; 
                 }
             });
-            });
-        });
+        }
+    });
+});
     </script>
 </body>
 
