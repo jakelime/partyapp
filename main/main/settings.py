@@ -221,3 +221,8 @@ INFO_COMPANY_DEPARTMENT = os.environ.get(
 INFO_COMPANY_COMMITTEE = os.environ.get(
     "INFO_COMPANY_COMMITTEE", "Durian Party Organistion Committee"
 )
+
+
+# Handles Reverse proxy routing
+FORCE_SCRIPT_NAME = "/durianparty"
+USE_X_FORWARDED_HOST = True
