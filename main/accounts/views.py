@@ -16,6 +16,7 @@ from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.list import ListView
 from employees import models as employees_models
+from bingo import models as bingo_models
 
 from accounts import forms as accounts_forms
 from accounts.tokens import account_activation_token
@@ -63,6 +64,10 @@ class SignUpViewNopassword(CreateView):
             user.is_no_password = True
             user.preferred_name = emp_obj.name
             user.save()
+            bingo_model = bingo_models.BingoBoard()
+            bingo_model.generateBoard()
+            bingo_model.owner = user
+            bingo_model.save()
         return super().form_valid(form)
 
     def form_invalid(self, form):

@@ -1,0 +1,355 @@
+{% extends 'bingo/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <style>
+      /* Hide default HTML checkbox */
+        .toggle-switch input[type="checkbox"] {
+            display: none;
+        }
+
+        /* The slider (the track) */
+        .toggle-switch .slider {
+            position: relative;
+            cursor: pointer;
+            background-color: #ccc; /* Default background when off */
+            transition: 0.4s;
+            border-radius: 34px; /* Makes it pill-shaped */
+            width: 60px; /* Width of the track */
+            height: 34px; /* Height of the track */
+            display: block; /* Ensures it takes up space */
+        }
+
+        /* The knob/circle */
+        .toggle-switch .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px; /* Height of the knob */
+            width: 26px; /* Width of the knob */
+            left: 4px; /* Initial position from left */
+            bottom: 4px; /* Initial position from bottom */
+            background-color: white; /* Knob color */
+            transition: 0.4s;
+            border-radius: 50%; /* Makes it circular */
+        }
+
+        /* When the checkbox is checked, move the knob */
+        .toggle-switch input[type="checkbox"]:checked + .slider:before {
+            transform: translateX(26px); /* Move knob to the right (60px - 34px - 4px = 26px) */
+        }
+
+        /* When the checkbox is checked, change the slider background */
+        .toggle-switch input[type="checkbox"]:checked + .slider {
+            background-color: #2196F3; /* Blue background when on */
+        }
+
+        /* Optional: focus styles */
+        .toggle-switch input[type="checkbox"]:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        /* Label styling (optional, for context) */
+        .toggle-switch-label {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between label text and switch */
+            font-size: 18px;
+            color: #333;
+        }
+    .table-container-numbers {
+        height: 390px; /* Set a fixed height for the scrollable area */
+        overflow-y: auto; /* Enable vertical scrolling */
+        border: 1px solid #ccc; /* Just for visual clarity */
+    }
+    .table-container-winners {
+        height: 300px; /* Set the maximum height */
+        overflow-y: auto;   /* Enable vertical scrolling */
+        border: 1px solid #ccc; /* Optional: for visual clarity */
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    th {
+        background-color: #f2f2f2;
+        position: sticky; /* Makes header sticky */
+        top: 0; /* Sticks header to the top of the container */
+        z-index: 1; /* Ensures header is above scrolling content */
+    }
+
+      /* Form Element Styling */
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+  }
+
+  .form-group input[type="text"] {
+    width: calc(100% - 18px); /* Adjust for padding and border */
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+  }
+
+  /* Countdown Timer Label */
+  .countdown-label {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #d9534f; /* Example color for urgency */
+    margin-top: 10px;
+    display: block; /* Make it block level to take its own line */
+  }
+
+    /* Styles for the "Refresh Content" button */
+  #manualDrawButton {
+    padding: 10px 20px; /* Vertical and horizontal padding */
+    background-color: #007bff; /* Primary blue color */
+    color: white; /* White text */
+    border: none; /* No border */
+    width: 100%;
+    border-radius: 5px; /* Slightly rounded corners */
+    cursor: pointer; /* Pointer on hover */
+    font-size: 16px; /* Good font size */
+    font-weight: bold; /* Bold text */
+    transition: background-color 0.3s ease, transform 0.1s ease; /* Smooth hover transition */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
+  }
+
+  #manualDrawButton:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    transform: translateY(-1px); /* Slight lift effect */
+  }
+
+  #manualDrawButton:active {
+    background-color: #004085; /* Even darker on click */
+    transform: translateY(0); /* Reset lift on click */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* Smaller shadow on click */
+  }
+    </style>
+  <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-4">
+    <h1>Game Master Controls</h1>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+    <div>
+    <div>
+    <h2> Total Players: {{ num_players }}</h2>
+    <h2> Total Winners: {{ num_winners }}</h2>
+    </div>
+    <div class="table-container-winners"  >
+     <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Employee ID</th>
+        <th>Column 3 Header</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for winner in winners %}
+      <tr>
+        <td>{{winner.owner.preferred_name}}</td>
+        <td>{{winner.owner.username}}</td>
+        <td>Row 1 Data C</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    </div>
+    <div style="margin-top: 10px; margin-right: 20px; display:flex; flex-direction:row; justify-content:space-between;">
+    <label class="toggle-switch-label">
+        <span>Auto Draw</span>
+            <div class="toggle-switch">
+            {% if toggle_state == True %}
+            <span>{{toggle_state}}</span>
+            {% else %}
+            <span>false</span>
+            {% endif %}
+                <input type="checkbox" id="toggleAutoDraw" {% if toggle_state == 'True' %}checked{% endif %}>
+                <span class="slider"></span>
+            </div>
+        </label>
+    
+    <div class="form-group">
+        <label for="periodInput">Period:</label>
+        <input type="text" id="periodInput" name="period" value="{{ period }}" min="10"> </div>
+
+    <div class="form-group">
+        <label>Next Draw:</label>
+        <span id="countdownTimer" class="countdown-label">00:00</span>
+    </div>
+    </div>
+    </div>
+    <div>
+    <div class="table-container-numbers">  
+    <table>
+    <thead>
+      <tr>
+        <th>Winning Numbers</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for n in winning_numbers %}
+      <tr>
+        <td>{{n}}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+        <div style="margin-top:15px;">
+            <button id="manualDrawButton">Manual Draw</button>
+        </div>
+    </div>
+    </div>
+  </main>
+
+<script>
+    const periodInput = document.getElementById('periodInput');
+    let countdownInterval; // Variable to hold the interval ID
+    const countdownTimerDisplay = document.getElementById('countdownTimer');
+
+    function startCountdown() {
+        // Clear any existing countdown to prevent multiple intervals
+        clearInterval(countdownInterval); 
+
+        let period = parseInt(periodInput.value);
+        if (isNaN(period) || period <= 0) {
+            alert("Please enter a valid period (a positive number).");
+            toggleAutoDraw.checked = false; // Turn off toggle if period is invalid
+            countdownTimerDisplay.textContent = "00:00";
+            return;
+        }
+
+        let timeLeft = period;
+
+        function updateCountdown() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            countdownTimerDisplay.textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                draw()
+                //alert("Time for a draw!"); // Alert when countdown finishes
+            } else {
+                timeLeft--;
+            }
+        }
+
+        // Call updateCountdown immediately to show the initial time
+        updateCountdown(); 
+        // Set up the interval to call updateCountdown every second
+        countdownInterval = setInterval(updateCountdown, 1000); 
+    }
+
+    function stopCountdown() {
+        clearInterval(countdownInterval);
+        countdownTimerDisplay.textContent = "00:00";
+    }
+
+    function draw() {
+        const period = periodInput.value;
+        const toggleState = toggleAutoDraw.checked; // true or false
+
+        const data = {
+        period: period,
+        toggle_state: toggleState, // Use snake_case for Django consistency
+        draw: true
+    };
+
+        // Send the POST request
+        fetch('/bingo/gmview', { // Replace '/game-master/' with the actual URL of your GameMasterView
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') // Important for Django security
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            // Handle the response if needed.
+            // If Django redirects, the browser will automatically follow.
+            if (response.ok) {
+                window.location.href = response.url; 
+                // No explicit action needed here, as the browser will follow the redirect
+                // You might want to update UI or show a temporary message if the redirect takes time
+            } else {
+                console.error('Failed to send draw request:', response.statusText);
+                // Handle errors, e.g., show an error message to the user
+                alert('Error sending draw request. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Network error:', error);
+            alert('Network error. Could not connect to the server.');
+        });
+    }
+
+    // You can add JavaScript here to respond to the toggle state change
+    const toggleAutoDraw = document.getElementById('toggleAutoDraw');
+    toggleAutoDraw.addEventListener('change', function() {
+        if (this.checked) {
+        console.log('Toggle is ON');
+        startCountdown();
+        // Perform actions when toggle is ON
+        } else {
+        console.log('Toggle is OFF');
+        stopCountdown();
+        // Perform actions when toggle is OFF
+        }
+    });
+
+
+
+    document.getElementById('manualDrawButton').addEventListener('click', function() {
+        draw()
+    });
+
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+    }
+
+
+    periodInput.addEventListener('change', function() {
+        if (toggleAutoDraw.checked) {
+            startCountdown(); // Restart countdown if period changes while auto-draw is on
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+        if (toggleAutoDraw.checked) {
+            // If you want the countdown to *immediately* resume when the page reloads and toggle is on:
+            startCountdown(); 
+            // Otherwise, the user will have to manually toggle it off/on to start it again.
+        } else {
+                countdownTimerDisplay.textContent = "00:00"; // Ensure consistent initial display
+        }
+    });
+
+
+</script>
+{% endblock %}

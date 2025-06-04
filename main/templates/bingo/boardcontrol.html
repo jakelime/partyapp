@@ -1,0 +1,41 @@
+{% extends 'bingo/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-4"> 
+  </h1>
+  <div style="display:flex; flex-direction:row;">
+    <form method = "POST">
+  {% csrf_token %}
+  <div style="display:flex; flex-direction:column; margin-right:50px">
+
+    <h3>Update Settings:</h3> {# Changed from span for better hierarchy #}
+    
+    <label for="start_num_input">Start Number:</label>
+    <input type="number" id="start_num_input" name="start_num" value="{{ settings.start_num }}" min="1">
+    
+    <label for="end_num_input">End Number:</label>
+    <input type="number" id="end_num_input" name="end_num" value="{{ settings.end_num }}" min="1">
+    
+    <label for="dims_input">Board Dimensions:</label>
+    <input type="number" id="dims_input" name="dims" value="{{ settings.dims }}" min="1" max="11">
+    
+    {# You'll need a form to submit these changes #}
+    <button type="submit" name="change" style="margin-top: 10px">Save Settings</button>
+</div>
+    </form>
+  <div style="display:flex; flex-direction:column;">
+  <h3>Current Settings:</h3>
+  <span>Start Number: {{settings.start_num}}</span>
+  <span>End Number: {{settings.end_num}}</span>
+  <span>Board Dimensions: {{settings.dims}}</span>
+  </div>
+  </div>
+    <form method = "POST">
+      <div class="col-lg-10 pt-4">
+      {% csrf_token %}
+      <input type="submit" value="reset" name="reset">
+      </div>
+    </form>
+  </main>
+  
+{% endblock %}

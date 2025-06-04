@@ -1,56 +1,209 @@
+{% extends 'bingo/base_mobile.html' %}
+{% load django_bootstrap5 %}
 {% block content %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>7x7 Button Grid</title>
     <style>
+        .accordion-item {
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden; /* Ensures content doesn't spill out when hidden */
+        }
+
+        .accordion-header {
+            background-color: #f1f1f1;
+            height: 30px;
+            color: #333;
+            padding: 35px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+            font-size: clamp(1.5rem, 4vw, 3rem); /* This will scale font size */
+        }
+
+        .accordion-header:hover {
+            background-color: #e2e2e2;
+        }
+
+        .accordion-header.active {
+            background-color: #d1d1d1;
+        }
+
+        .accordion-content {
+            padding: 0 15px;
+            background-color: white;
+            max-height: 0; /* Initially hidden */
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out; /* Smooth transition */
+        }
+
+        .accordion-content.show {
+            max-height: 400px; /* Set a fixed max height for the scrollable area */
+            padding: 15px;
+            overflow-y: auto; /* Enable vertical scrolling if content overflows */
+            -webkit-overflow-scrolling: touch; /* For smoother scrolling on iOS */
+            /* Optional: Custom scrollbar styles (Chrome/Safari) */
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: #00796b #f1f1f1; /* Firefox */
+        }
+
+        .arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-header.active .arrow {
+            transform: rotate(90deg); /* Rotate arrow when active */
+        }
+ /* --- Bingo Board & Button Styles (CRITICAL CHANGES HERE) --- */
+        /* Removed extraneous body styles as they are handled by base.html */
         body {
             font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
-            padding: 10px;
+            padding: 0; /* Ensures no extra padding pushes content out */
             box-sizing: border-box;
-            }
+            overflow-x: hidden; /* Prevent any horizontal scrollbar on the entire page */
+        }
 
-            .grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 3px;
+        /* This div is the direct container for your grid,
+           it needs to manage its own padding and ensure the grid fits. */
+        div[style="display:flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; "] {
+            /* Inherit width from main-content-area */
             width: 100%;
-            }
+            height: auto; /* Allow height to adjust to content, not fixed 100% */
+            padding: 5px; /* Add slight padding around the grid for small screens */
+            box-sizing: border-box; /* Include padding in element's total width */
+            /* Ensure it doesn't force vertical centering if content is large */
+            display: flex; /* Keep flex for centering the grid within it */
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align to start, let content push it down */
+        }
 
-            .grid button {
+        .grid {
+            display: grid;
+            grid-template-columns: repeat({{dims}}, 1fr);
+            gap: 3px;
+            width: 100%; /* Make the grid itself fill its container */
+            max-width: 500px; /* Optional: Constrain max width on larger screens */
+            box-sizing: border-box; /* Crucial: Ensures gap is included in the 100% width */
+        }
+
+        .grid button {
             aspect-ratio: 1 / 1;  /* Make buttons always square */
             width: 100%;
-            font-size: clamp(64px, 4vw, 128px); /* Scales font between 16 and 32px */
+            font-size: clamp(1rem, 4.5vw, 4rem); /* **Adjusted for better mobile scaling** */
             cursor: pointer;
             border: 1px solid #888;
             border-radius: 6px;
             background-color: white;
             transition: background-color 0.2s ease;
-            }
+            padding: 0; /* **Remove default button padding to prevent overflow** */
+            box-sizing: border-box; /* **Crucial: Include padding/border in button's size** */
+            display: flex; /* For centering text (and potential background images) */
+            justify-content: center;
+            align-items: center;
+            background-size: cover; /* Ensures background image covers the button */
+            background-position: center; /* Centers the background image */
+            background-repeat: no-repeat; /* Prevents repeating background image */
+            color: black; /* Default text color, can be transparent if image is used */
+        }
 
-            .grid button:disabled {
+        .grid button:disabled {
             background-color: #ccc;
             cursor: not-allowed;
-            }
+            color: #666; /* Slightly darker text for disabled buttons */
+        }
 
-            /* Optional: slightly smaller gap on small screens */
-            @media (max-width: 360px) {
+        /* Styles for the "Past Winning Numbers" grid */
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(30px, 1fr)); /* **More responsive column setup** */
+            gap: 8px; /* Slightly reduced gap */
+            padding: 3px 0;
+        }
+
+        .number-item {
+            background-color: #e0f7fa;
+            border: 1px solid #b2ebf2;
+            border-radius: 4px;
+            padding: 2px; /* Slightly reduced padding */
+            text-align: center;
+            font-weight: bold;
+            color: #00796b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            aspect-ratio: 1/1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(1.3rem, 3vw, 2.5rem); /* Adjusted clamp for number items */
+        }
+
+        /* Optional: Smaller gap on very small screens for better fit */
+        @media (max-width: 400px) {
             .grid {
-                gap: 1px;
+                gap: 2px;
             }
+            .grid button {
+                font-size: clamp(0.9rem, 4vw, 3rem); /* Fine-tune font size */
             }
+        }
+
+        @media (max-width: 320px) {
+            .grid {
+                gap: 1px; /* Minimal gap for tiny screens */
+            }
+            .grid button {
+                font-size: clamp(0.8rem, 4vw, 2.5rem); /* Even smaller font for tiny screens */
+            }
+        }
     </style>
 </head>
 <body>
+    <div>
+    <div>
+    <div class="accordion-item">
+    <div class="accordion-header">
+            Past Winning Numbers
+            <span class="arrow">&#9658;</span> </div>
+            <div class="accordion-content">
+                {% if winning_numbers %}
+                    <div class="numbers-grid">
+                    {% for number in winning_numbers %}
+                        <div class="number-item">{{ number }}</div>
+                    {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No numbers available.</p>
+                {% endif %}
+            </div>
+        </div>
+    
+
     <div style="display:flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; ">
     <div class="grid">
+    {% comment %}
+        We'll loop from 0 up to (settings.dims - 1) for both rows and columns.
+        The `range` filter is perfect for this.
+    {% endcomment %}
+        {% for row in dims_list %} {# Loop through rows #}
+            {% for col in dims_list %} {# Loop through columns #}
+                <button data-row="{{ row }}" data-col="{{ col }}">
+                    {{ row }},{{ col }}
+                </button>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    <span>{{dims}}</span>
+    {% comment %} <div class="grid">
         <!-- 7x7 Buttons with data attributes -->
         <!-- Buttons will call the same JS listener -->
         <!-- You can copy this structure into a Django template too -->
@@ -109,6 +262,16 @@
         <button data-row="6" data-col="4">6,4</button>
         <button data-row="6" data-col="5">6,5</button>
         <button data-row="6" data-col="6">6,6</button>
+    </div> {% endcomment %}
+    </div>
+    <div style="padding-left: 20px;">
+    <p>
+    Employee ID: {{ user.username}}
+    </p>
+    <p>
+    Employee Name: {{ user.preferred_name}}
+    </p>
+    </div>
     </div>
 
     <script>
@@ -163,6 +326,26 @@
             });
         });
        
+       document.addEventListener('DOMContentLoaded', function() {
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+            accordionHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                // Toggle the 'active' class on the header
+                this.classList.toggle('active');
+
+                // Select the content sibling
+                const content = this.nextElementSibling;
+
+                // Toggle the 'show' class on the content
+                if (content.classList.contains('show')) {
+                content.classList.remove('show');
+                } else {
+                content.classList.add('show');
+                }
+            });
+            });
+        });
     </script>
 </body>
 
