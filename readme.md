@@ -30,11 +30,11 @@ To generate a `DJANGO_SECRET_KEY`, you can run this command
 
 ```shell
 # ./.env
-DJANGO_SECRET_KEY='somesecret'
+DJANGO_SECRET_KEY='somesecrets$+c7(u-PLEASE_CHANGEi($nigsomesecretsq_'
 DJANGO_MEDIA_ROOT='/www/media'
-DJANGO_MEDIA_URL='media/'
+DJANGO_MEDIA_URL='/media/'
 DJANGO_STATIC_ROOT='/www/static'
-DJANGO_STATIC_URL='static/'
+DJANGO_STATIC_URL='/static/'
 DJANGO_DEBUG=true
 IS_DEVELOPMENT_ENV=true
 INFO_COMPANY_NAME='myAwesomeCompany'
