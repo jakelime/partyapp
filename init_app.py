@@ -17,17 +17,23 @@ def run_command(cmds: list[str]) -> list:
             print(cp.stderr)
     except subprocess.CalledProcessError as e:
         print(f"Error running Django commands: {e.stderr}")
+        raise 
 
 
 def run_django_commands():
-    run_command(["python", "main/manage.py", "makemigrations", "accounts"])
-    run_command(["python", "main/manage.py", "makemigrations", "employees"])
-    run_command(["python", "main/manage.py", "makemigrations", "bingo"])
-    run_command(["python", "main/manage.py", "makemigrations", "knowledge"])
-    run_command(["python", "main/manage.py", "makemigrations", "obstacle"])
-    run_command(["python", "main/manage.py", "migrate"])
-    run_command(["python", "main/manage.py", "import_employees"])
-    print("All Django commands executed successfully.")
+    try:
+        run_command(["python", "main/manage.py", "makemigrations", "accounts"])
+        run_command(["python", "main/manage.py", "makemigrations", "employees"])
+        run_command(["python", "main/manage.py", "makemigrations", "bingo"])
+        run_command(["python", "main/manage.py", "makemigrations", "knowledge"])
+        run_command(["python", "main/manage.py", "makemigrations", "obstacle"])
+        run_command(["python", "main/manage.py", "migrate"])
+        run_command(["python", "main/manage.py", "import_employees"])
+        print("All Django commands executed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while running Django commands: {e}")
+        
+    
 
 
 def init_version():
