@@ -3,7 +3,7 @@ import subprocess
 from typing import Optional
 
 from dotenv import load_dotenv
-from main.main.utils import DjangoVersionManager
+from main.init_version import main as init_version
 
 load_dotenv()
 DJANGO_SUPERUSER_PASSWORD = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
@@ -14,12 +14,14 @@ if not DJANGO_SUPERUSER_PASSWORD:
     )
 
 
-def run_command(cmds: list[str], env: Optional[dict] = None) -> list:
+def run_command(
+    cmds: list[str], env: Optional[dict] = None, check: bool = True
+) -> list:
     try:
         print(f"running commands: {' '.join(cmds)}")
         cp = subprocess.run(
             cmds,
-            check=True,
+            check=check,
             capture_output=True,
             text=True,
         )
@@ -53,19 +55,12 @@ def run_django_commands():
             env={
                 "DJANGO_SUPERUSER_PASSWORD": DJANGO_SUPERUSER_PASSWORD,
             },
+            check=False,
         )
         run_command(["python", "main/manage.py", "import_employees"])
         print("All Django commands executed successfully.")
     except subprocess.CalledProcessError as e:
-        print(f"An error occurred while running Django commands: {e}")
-
-
-def init_version():
-    dvm = DjangoVersionManager()
-    dvm.write_app_version_file()
-    version = dvm.get_app_version()
-    print(f"App version initialized: {version}")
-    return version
+        print(f"ERROR!!! While running Django commands:\n{e}")
 
 
 def main():
