@@ -1,9 +1,20 @@
+import os
 import subprocess
+from typing import Optional
 
+from dotenv import load_dotenv
 from main.main.utils import DjangoVersionManager
 
+load_dotenv()
+DJANGO_SUPERUSER_PASSWORD = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
+if not DJANGO_SUPERUSER_PASSWORD:
+    raise ValueError(
+        "DJANGO_SUPERUSER_PASSWORD environment variable is not set. "
+        "Please set it in your .env file."
+    )
 
-def run_command(cmds: list[str]) -> list:
+
+def run_command(cmds: list[str], env: Optional[dict] = None) -> list:
     try:
         print(f"running commands: {' '.join(cmds)}")
         cp = subprocess.run(
@@ -17,7 +28,7 @@ def run_command(cmds: list[str]) -> list:
             print(cp.stderr)
     except subprocess.CalledProcessError as e:
         print(f"Error running Django commands: {e.stderr}")
-        raise 
+        raise
 
 
 def run_django_commands():
@@ -28,12 +39,25 @@ def run_django_commands():
         run_command(["python", "main/manage.py", "makemigrations", "knowledge"])
         run_command(["python", "main/manage.py", "makemigrations", "obstacle"])
         run_command(["python", "main/manage.py", "migrate"])
+        run_command(
+            [
+                "python",
+                "main/manage.py",
+                "createsuperuser",
+                "--noinput",
+                "--username",
+                "admin",
+                "--email",
+                "admin@admin.com",
+            ],
+            env={
+                "DJANGO_SUPERUSER_PASSWORD": DJANGO_SUPERUSER_PASSWORD,
+            },
+        )
         run_command(["python", "main/manage.py", "import_employees"])
         print("All Django commands executed successfully.")
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while running Django commands: {e}")
-        
-    
 
 
 def init_version():
