@@ -1,3 +1,5 @@
+import subprocess
+
 try:
     from main.utils import DjangoVersionManager
 except ImportError:
@@ -6,10 +8,12 @@ except ImportError:
 
 def init_version():
     dvm = DjangoVersionManager()
-    dvm.write_app_version_file()
-    version = dvm.get_app_version()
-    print(f"App version initialized: {version}")
-    return version
+    try:
+        version = dvm.get_app_version(run_git_tag=True)
+        print(f"App version initialized using git method: {version}")
+    except subprocess.CalledProcessError:
+        version = dvm.get_app_version(run_git_tag=False)
+        print(f"App version initialized using file-based method: {version}")
 
 
 def main():

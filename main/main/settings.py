@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import logging
 import os
 from pathlib import Path
-
+from subprocess import CalledProcessError
 from dotenv import load_dotenv
 
 from main.utils import DjangoVersionManager, convert_str_to_bool
@@ -30,12 +30,11 @@ APP_LOCAL_TEMP_DIR.mkdir(parents=True, exist_ok=True)
 try:
     # This command fetches the latest tag from the git repository
     # and uses it as the version number to be used in the application.
-    WEBAPP_VERSION = DjangoVersionManager().get_app_version(refresh=False)
-except Exception as e:
-    print(f"{e};")
-    print("uninitialized git repository, initializing...")
-    dvm = DjangoVersionManager()
-    WEBAPP_VERSION = dvm.get_app_version(refresh=True)
+    WEBAPP_VERSION = DjangoVersionManager().get_app_version(run_git_tag=True)
+except CalledProcessError:
+    # Fetches the version number from APP_VERSION file
+    WEBAPP_VERSION = DjangoVersionManager().get_app_version(run_git_tag=False)
+
 
 LOGFILE_FILEPATH = BASE_DIR / APP_LOCAL_TEMP_DIR / "logs" / f"{LOGFILE_NAME}"
 LOGFILE_FILEPATH.parent.mkdir(parents=True, exist_ok=True)

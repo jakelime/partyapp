@@ -208,10 +208,6 @@ def get_job_creation_confidence_level(msg):
     return len(matches)
 
 
-def get_version():
-    return DjangoVersionManager().get_app_version()
-
-
 def generate_random_email(name: Optional[str] = None) -> str:
     if not name:
         name = f"{random.choice(WORD_LIST)}-{''.join(random.choices(CHARACTERS, k=6))}"
@@ -246,111 +242,25 @@ def _natural_sort_key(version_string: str) -> Tuple[Union[str, int], ...]:
     return tuple(key_parts)
 
 
-class VersionManager:
-    def __init__(self, folder_mode: str = "") -> None:
-        """
-        Manages version by placing `app_version.txt` within
-        source folder.
-
-        Args:
-            folder_mode (str, optional): accepts different modes
-            [app_bundles, django, *].
-            app_bundle mode: places app_version.txt in /app/bundles/
-            django mode: places app_version.txt in django_root/main/main/
-            * mode: places app_version.txt in Path(__file__).parent
-            Defaults to "".
-
-        Raises:
-            [Django mode] Raises RuntimeError if unable to locate
-            manage.py.
-        """
-        # Determine the root directory of the script for relative path calculations
-        script_dir = Path(__file__).parent
-
-        match folder_mode.lower():
-            case "app_bundles":
-
-                self.version_froot = script_dir / "bundles"
-            case "django":
-                # This assumes the script is in a 'utils' or similar directory,
-                # and manage.py is one level up from that directory's parent.
-                # e.g., if script is project_root/app/utils/script.py,
-                # then script_dir.parent is project_root/app
-                # and script_dir.parent.parent is project_root
-                # manage.py would be at project_root/manage.py
-                # Original: self.version_froot = Path(__file__).parent
-                # This seems to imply app_version.txt is in the same dir as this script for django mode,
-                # but then it checks for manage.py in parent.
-                # Let's clarify the django path for app_version.txt.
-                # If app_version.txt is in django_root/main/main/, and this script is elsewhere,
-                # this needs a more robust way to find django_root/main/main/.
-                # For now, sticking to original intent for version_froot:
-                self.version_froot = script_dir
-                # The check for manage.py is relative to version_froot.parent
-                # If version_froot is script_dir, then manage.py is expected at script_dir.parent / "manage.py"
-                locate_managepy = self.version_froot.parent / "manage.py"
-                if not locate_managepy.is_file():
-                    # Try another common Django structure: manage.py in the script's parent's parent
-                    # e.g. myproject/myapp/utils/version_script.py -> myproject/manage.py
-                    locate_managepy_alt = script_dir.parent.parent / "manage.py"
-                    if not locate_managepy_alt.is_file():
-                        raise RuntimeError(
-                            f"VersionManager(folder_mode='{folder_mode}') unable to locate django manage.py "
-                            f"at {locate_managepy} or {locate_managepy_alt}"
-                        )
-                    # If found at alternative, assume app_version.txt path needs to be relative to Django root.
-                    # The original code puts app_version.txt in Path(__file__).parent for django mode.
-                    # If the intent is django_root/main/main/, this needs adjustment.
-                    # For now, keeping self.version_froot as script_dir.
-                    # If app_version.txt should be in django_project/main/main/
-                    # self.version_froot = locate_managepy.parent / "main" / "main" # Example
-            case _:
-                self.version_froot = script_dir
-
-        # Ensure the directory for app_version.txt exists
-        self.version_froot.mkdir(parents=True, exist_ok=True)
-
-    def write_app_version_file(
-        self, version: str = "", filename: str = "app_version.txt"
-    ) -> Path:
-        fpath = self.version_froot / filename
-        with open(fpath, "w") as fwriter:
-            fwriter.write(version)
-        lg.info(f"app_version={version} updated > {fpath}")
-        return fpath
-
-    def get_app_version_from_file(self, filename: str = "app_version.txt") -> str:
-        fpath = self.version_froot / filename
-        if not fpath.is_file():
-            lg.warning(f"Version file not found: {fpath}")
-            return "vErr.Err.Err"
-        with open(fpath, "r") as fr:
-            version = fr.read().strip()
-        return version
-
-
 class CommandManager:
-    def __init__(self, env: Optional[dict] = None) -> None:
-        self.env = env
-
     def run(
         self,
         cmd: List[str],
         check: bool = True,
         timeout: Optional[int] = None,
-        text: bool = True,  # Changed default to True as per subprocess.run common usage for text mode
+        text: bool = True,
         shell: bool = False,
         cwd: Optional[Union[str, Path]] = None,
         show_cmd: bool = False,
+        env: Optional[dict] = None,
     ) -> subprocess.CompletedProcess:
+        # This method uses print statements, not logger because
+        # the Django app logger may not have been initialized yet.
         try:
             if not cmd:
                 raise ValueError("no cmd specified")
             if show_cmd:
                 lg.info(f"Running command: {' '.join(cmd)} in {cwd or Path.cwd()}")
-
-            # Ensure cwd is a string if it's a Path object for older Python versions if necessary
-            # subprocess.run handles Path objects for cwd since Python 3.6+
 
             results = subprocess.run(
                 cmd,
@@ -361,197 +271,156 @@ class CommandManager:
                 timeout=timeout,
                 shell=shell,
                 cwd=cwd,
-                env=self.env,
+                env=env,
             )
             return results
+
         except subprocess.CalledProcessError as call_error:
-            # results object might not be defined if error occurs before subprocess.run call (e.g. timeout in setup)
-            # However, CalledProcessError itself contains stdout and stderr if the process ran and exited with error.
-            lg.error(
+            print(
                 f"Command '{' '.join(cmd)}' failed with exit code {call_error.returncode}."
             )
             if call_error.stdout:
-                lg.error(f"STDOUT:\n{call_error.stdout}")
+                print(f"STDOUT:\n{call_error.stdout}")
             if call_error.stderr:
-                lg.error(f"STDERR:\n{call_error.stderr}")
+                print(f"STDERR:\n{call_error.stderr}")
             raise call_error
+
         except FileNotFoundError:
-            lg.error(f"Command not found: {cmd[0]}")
+            print(f"Command not found: {cmd[0]}")
             raise
+
         except Exception as e:
-            lg.error(
+            print(
                 f"An unexpected error occurred while running command '{' '.join(cmd)}': {e}"
             )
             raise
 
-    def run_with_output(
-        self,
-        cmd: List[str],
-        check: bool = True,
-        timeout: Optional[int] = None,
-        text: bool = True,
-        shell: bool = False,
-        cwd: Optional[Union[str, Path]] = None,
-        show_cmd: bool = False,
-    ) -> None:
 
-        # Capture results, including potential errors if check=False
-        results = self.run(
-            cmd,
-            check=check,
-            timeout=timeout,
-            text=text,
-            shell=shell,
-            cwd=cwd,
-            show_cmd=show_cmd,
-        )
+class GitCommandManager(CommandManager):
+    error_tag: str = "v0.0.0-error"
 
-        # Log stdout/stderr. If text=True, they are already strings.
-        if results.stdout:
-            lg.info(f"STDOUT:\n{results.stdout}")
-        else:
-            lg.info("STDOUT: (empty)")
-
-        if results.stderr:
-            # stderr might contain warnings even on success, or errors if check=False
-            if results.returncode == 0:
-                lg.info(f"STDERR (warnings/info):\n{results.stderr}")
-            else:
-                lg.error(f"STDERR (errors):\n{results.stderr}")
-        else:
-            lg.info("STDERR: (empty)")
-
-
-class GitVersionManager:
-
-    error_tag: str = "v0.0.0-git-error"
-
-    def __init__(
-        self,
-        ver_mgr: VersionManager,
-        cmd_mgr: CommandManager,
-    ) -> None:
-        self.ver_mgr = ver_mgr
-        self.cmd_mgr = cmd_mgr
-        self.version: Optional[str] = None
-
-    def run_git_get_app_version(self, show_cmd: bool = False) -> str:
+    def run_git_tag(self, debug_mode: bool = False) -> str:
+        # This method uses print statements, not logger because
+        # the Django app logger may not have been initialized yet.
         try:
-            results = self.cmd_mgr.run(["git", "tag"], show_cmd=show_cmd, text=True)
+            results = self.run(["git", "tag"], text=True)
         except FileNotFoundError:
-            lg.error("Git command not found. Is Git installed and in PATH?")
+            print("Git command not found. Is Git installed and in PATH?")
             return "v0.0.0-git-not-found"
         except subprocess.CalledProcessError:
-            lg.error("Failed to run 'git tag'. Is this a git repository?")
+            print("Failed to run 'git tag'. Is this a git repository?")
             return self.error_tag
 
         tags_output = results.stdout
         if not tags_output:
-            lg.warning("No git tags found in 'git tag' output.")
+            print("No git tags found in 'git tag' output.")
             return self.error_tag
-
         tags = tags_output.splitlines()
-
-        lg.debug(f"Raw git tags: {tags}")
-
-        # Filter tags that match the "v*.*.*" pattern.
-        # This pattern implies at least three numeric components (major.minor.patch).
-        # Example: v1.0.0, v0.1.0-alpha
-        # It does not strictly enforce that * are numbers, fnmatch is for glob patterns.
-        # For more precise filtering (e.g. v<num>.<num>.<num>), a regex could be used.
+        if debug_mode:
+            print(f"Raw git tags: {tags}")
         filtered_tags = [tag for tag in tags if fnmatch(tag, "v*.*.*")]
-
         if not filtered_tags:
-            lg.warning(f"No tags matched pattern 'v*.*.*' from raw tags: {tags}")
+            print(f"No tags matched pattern 'v*.*.*' from raw tags: {tags}")
             # Check if any tags exist at all, to provide a more specific warning
             if tags:
-                lg.warning(
+                print(
                     "Consider checking tag naming convention. Expected format like v1.2.3 or v0.1.0-alpha."
                 )
             return self.error_tag
-
-        # Sort tags using the natural sort key
         filtered_tags.sort(key=_natural_sort_key)
-        lg.debug(f"Sorted filtered tags: {filtered_tags}")
-
+        if debug_mode:
+            print(f"Sorted filtered tags: {filtered_tags}")
         try:
             latest_tag = filtered_tags[-1]
         except IndexError:
             # This case should be covered by "if not filtered_tags" above,
             # but as a safeguard:
-            lg.warning("No git tags found after filtering and sorting.")
+            print("No git tags found after filtering and sorting.")
             self.error_tag
         return latest_tag
 
-    def get_app_version(self, refresh: bool = False) -> str:
-        """
-        Gets the app version. If refresh is enabled, it will
-        run git tag command to pull the latest tag.
 
-        Args:
-            refresh (bool, optional): runs git command to get latest tag. Defaults to False.
+class VersionManager:
+    cmd_manager: CommandManager
+    version_fpath_root: Optional[Path] = None
+    app_ver_filename: str = "app_version.txt"
+    app_ver_filepath: Optional[Path] = None
+    version: str = "v0.0.0-error"
 
-        Returns:
-            str: version number
-        """
-        if (self.version is not None) and (not refresh):
-            return self.version
-        else:
-            self.version = self.run_git_get_app_version()
-            return self.version
-
-    def write_app_version_file(
+    def __init__(
         self,
-        version: str = "",
-        filename: str = "app_version.txt",
-        refresh: bool = False,
-    ) -> Path:
-        if not version:
-            version = self.get_app_version(refresh=refresh)
-        # Ensure this method returns the Path object as per its type hint
-        return self.ver_mgr.write_app_version_file(version, filename)
+        folder_mode: str = "app_bundles",
+        app_ver_filename: str = "app_version.txt",
+    ) -> None:
+        self.gcm = GitCommandManager()
+        self.version_fpath_root = self.init_root_folder_for_appversion_file(folder_mode)
+        self.app_ver_filename = app_ver_filename
+        self.app_ver_filepath = self.version_fpath_root / self.app_ver_filename
 
+    def init_root_folder_for_appversion_file(self, folder_mode: str = "") -> Path:
+        """Initializes the root folder for the app version file based on the specified mode."""
+        # Determine the root directory of the script for relative path calculations
+        script_dir = Path(__file__).parent
 
-class GitCommandManager(CommandManager):
-    def __init__(self, env: Optional[dict] = None) -> None:
-        super().__init__(env)
-        self.version: Optional[str] = None
+        match folder_mode.lower():
+            case "app_bundles":
+                f_root = script_dir / "bundles"
+            case "django":
+                f_root = script_dir
+                locate_managepy = f_root.parent / "manage.py"
+                if not locate_managepy.is_file():
+                    # Try another common Django structure: manage.py in the script's parent's parent
+                    # e.g. myproject/myapp/utils/version_script.py -> myproject/manage.py
+                    locate_managepy_alt = script_dir.parent.parent / "manage.py"
+                    if not locate_managepy_alt.is_file():
+                        raise RuntimeError(
+                            f"VersionManager(folder_mode='{folder_mode}') unable to locate django manage.py "
+                            f"at {locate_managepy} or {locate_managepy_alt}"
+                        )
+            case _:
+                f_root = script_dir
 
-    def get_app_version(self, refresh: bool = False) -> str:
-        if (self.version is not None) and (not refresh):
+        f_root.mkdir(parents=True, exist_ok=True)
+        return f_root
+
+    def write_app_version_file(self, version: str = "") -> Path:
+        # This method uses print statements, not logger because
+        # the Django app logger may not have been initialized yet.
+        with open(self.app_ver_filepath, "w") as fwriter:
+            fwriter.write(version)
+        print(f"app_version={version} updated > {self.app_ver_filepath}")
+        return self.app_ver_filepath
+
+    def get_app_version_from_file(self) -> str:
+        if not self.app_ver_filepath.is_file():
+            print(f"Version file not found: {self.app_ver_filepath}")
             return self.version
+        with open(self.app_ver_filepath, "r") as fr:
+            version = fr.read().strip()
+            print(f"{version=}")
+        self.version = version
+        return self.version
+
+    def get_app_version(self, run_git_tag: bool = False) -> str:
+        """Retrieves the application version either from a git tag or from a file."""
+        if run_git_tag:
+            return self.update_app_version_from_git()
         else:
-            lg.error(
-                "GitCommandManager.get_app_version called, but run_git_get_app_version is missing."
-            )
-            self.version = "v0.0.0-error-gcm-get"
-            return self.version
+            return self.get_app_version_from_file()
 
-    def write_app_version_file(
-        self,
-        version: str = "",
-        filename: str = "app_version.txt",
-        refresh: bool = False,
-    ) -> Path:
-        if not version:
-            version = self.get_app_version(refresh=refresh)
-        lg.error(
-            "GitCommandManager.write_app_version_file called, "
-            "but super().write_app_version_file is invalid."
-        )
-
-        raise NotImplementedError(
-            "GitCommandManager.write_app_version_file requires a VersionManager."
-        )
+    def update_app_version_from_git(self) -> str:
+        """Runs `git tag` command to get the latest version tag,
+        then writes it to the app version file."""
+        self.version = self.gcm.run_git_tag()
+        self.write_app_version_file(self.version)
+        return self.version
 
 
-class DjangoVersionManager(GitVersionManager):
-    def __init__(self) -> None:
-        # Pass a CommandManager instance to GitVersionManager's constructor
-        super().__init__(VersionManager(folder_mode="django"), CommandManager())
+class GenericAppVersionManager(VersionManager):
+    def __init__(self, folder_mode="app_bundles", app_ver_filename="app_version.txt"):
+        super().__init__(folder_mode, app_ver_filename)
 
 
-class AppVersionManager(GitVersionManager):
-    def __init__(self) -> None:
-        # Pass a CommandManager instance to GitVersionManager's constructor
-        super().__init__(VersionManager(folder_mode="app_bundles"), CommandManager())
+class DjangoVersionManager(VersionManager):
+    def __init__(self, folder_mode="django", app_ver_filename="app_version.txt"):
+        super().__init__(folder_mode, app_ver_filename)
