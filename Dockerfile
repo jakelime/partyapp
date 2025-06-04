@@ -8,6 +8,7 @@ ENV url_pypi=${url_pypi}
 WORKDIR /opt/partyapp
 COPY ./main/ ./
 COPY requirements.prod.txt ./
+COPY init_app.py ./
 
 RUN mkdir -p /var/log/partyapp
 RUN mkdir -p /var/cache/partyapp
