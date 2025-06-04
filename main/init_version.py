@@ -11,9 +11,13 @@ def init_version():
     try:
         version = dvm.get_app_version(run_git_tag=True)
         print(f"App version initialized using git method: {version}")
-    except subprocess.CalledProcessError:
-        version = dvm.get_app_version(run_git_tag=False)
-        print(f"App version initialized using file-based method: {version}")
+    except subprocess.CalledProcessError as e:
+        version_file_already_exist = dvm.version_file_exists()
+        if not version_file_already_exist:
+            print(f"ERROR git does not exist on system; {e=}")
+        else:
+            print(f"{version_file_already_exist=}")
+            print(f"{dvm.get_app_version_from_file()=}")
 
 
 def main():

@@ -27,13 +27,14 @@ LOGFILE_NAME = "django-partyapp.log"
 APP_LOCAL_TEMP_DIR = BASE_DIR.parent / "app_local_temp"
 APP_LOCAL_TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
-try:
-    # This command fetches the latest tag from the git repository
-    # and uses it as the version number to be used in the application.
-    WEBAPP_VERSION = DjangoVersionManager().get_app_version(run_git_tag=True)
-except CalledProcessError:
-    # Fetches the version number from APP_VERSION file
-    WEBAPP_VERSION = DjangoVersionManager().get_app_version(run_git_tag=False)
+
+dvm = DjangoVersionManager()
+if dvm.version_file_exists():
+    # Fetches the version number from existing APP_VERSION file
+    WEBAPP_VERSION = dvm.get_app_version_from_file()
+else:
+    # Attempts to create the APP_VERSION file from `git tag` command
+    WEBAPP_VERSION = dvm.get_app_version(run_git_tag=True)
 
 
 LOGFILE_FILEPATH = BASE_DIR / APP_LOCAL_TEMP_DIR / "logs" / f"{LOGFILE_NAME}"

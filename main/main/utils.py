@@ -304,12 +304,8 @@ class GitCommandManager(CommandManager):
         # the Django app logger may not have been initialized yet.
         try:
             results = self.run(["git", "tag"], text=True)
-        except FileNotFoundError:
-            print("Git command not found. Is Git installed and in PATH?")
-            return "v0.0.0-git-not-found"
-        except subprocess.CalledProcessError:
-            print("Failed to run 'git tag'. Is this a git repository?")
-            return self.error_tag
+        except Exception:
+            raise
 
         tags_output = results.stdout
         if not tags_output:
@@ -404,7 +400,11 @@ class VersionManager:
     def get_app_version(self, run_git_tag: bool = False) -> str:
         """Retrieves the application version either from a git tag or from a file."""
         if run_git_tag:
-            return self.update_app_version_from_git()
+            try:
+                version = self.update_app_version_from_git()
+                return version
+            except subprocess.CalledProcessError:
+                raise
         else:
             return self.get_app_version_from_file()
 
@@ -414,6 +414,10 @@ class VersionManager:
         self.version = self.gcm.run_git_tag()
         self.write_app_version_file(self.version)
         return self.version
+
+    def version_file_exists(self) -> bool:
+        """Checks if the app version file exists."""
+        return self.app_ver_filepath.is_file()
 
 
 class GenericAppVersionManager(VersionManager):
