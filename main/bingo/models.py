@@ -64,7 +64,7 @@ class BingoBoard(models.Model):
             dfm = df_marked.replace({False: " ", True: "W"})
             #lg.info(f"Marked board:\n{dfm}")
 
-        board_size = self.size
+        board_size = len(self.board)
 
         # Check rows: if any row is all True
         if df_marked.all(axis=1).any():

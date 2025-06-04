@@ -63,7 +63,7 @@ class SettingsView(TemplateView):
                 board.owner = player
                 board.save()
 
-        return redirect(reverse("bingo:test"))
+        return redirect(reverse("bingo:settings"))
 
 
 class PlayerView(LoginRequiredMixinNopassword, TemplateView):
@@ -96,9 +96,6 @@ class GameMasterView(TemplateView):
         context['num_players'] = accounts_models.CustomUser.objects.all().count()
 
         print(f"GET Request - Period: {context['period']}, Toggle State: {context['toggle_state']}")
-
-
-
         return context
 
     # Handle POST requests from your JavaScript fetch
@@ -111,12 +108,20 @@ class GameMasterView(TemplateView):
             draw = data.get('draw')
 
             if(draw):
+                if(not BingoSettings.objects.exists()):
+                    BingoSettings().save()
+
+                settings = BingoSettings.objects.all().first()
+
+                if winningNumber.objects.all().count() == settings.end_num+1 - settings.start_num:
+                    return JsonResponse({'error': 'out of numbers'}, status=500)
+
                 existing_winning_numbers = winningNumber.objects.values_list('num', flat=True)
-                new_winning_number = random.randint(1, 120)  # Assuming Bingo numbers are 1-75
+                new_winning_number = random.randint(settings.start_num, settings.end_num+1)  # Assuming Bingo numbers are 1-75
 
                 # Keep generating until we find a number that's not already a winner
                 while new_winning_number in existing_winning_numbers:
-                    new_winning_number = random.randint(1, 120)
+                    new_winning_number = random.randint(settings.start_num, settings.end_num+1)
 
                 new_winning_number_obj = winningNumber(num=new_winning_number)
                 new_winning_number_obj.save()
@@ -136,7 +141,6 @@ class GameMasterView(TemplateView):
                 print(winning_boards)
 
             # ------------------------------------
-
             # Construct the URL for redirection, including the parameters
             # Use the URL pattern name that expects these parameters
             redirect_url = reverse(
@@ -150,5 +154,6 @@ class GameMasterView(TemplateView):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
+            print(e)
             return JsonResponse({'error': str(e)}, status=500)
 
