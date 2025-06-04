@@ -1,9 +1,12 @@
 import os
 import subprocess
 from typing import Optional
-
+from pathlib import Path
 from dotenv import load_dotenv
-from main.init_version import main as init_version
+try:
+    from main.init_version import init_version
+except ImportError:
+    from init_version import init_version 
 
 load_dotenv()
 DJANGO_SUPERUSER_PASSWORD = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
@@ -14,6 +17,23 @@ if not DJANGO_SUPERUSER_PASSWORD:
     )
 
 
+def locate_manage_py(manage_py_filename:str = "manage.py") -> str:
+    """
+    Locate the manage.py file in the main directory.
+    """
+    pathname_relative_to_cwd = "manage.py"
+    cwd = Path(__file__).parent
+    manage_py = cwd / manage_py_filename
+    if manage_py.is_file():
+        return pathname_relative_to_cwd
+    else:
+        manage_py = cwd / "main" / manage_py_filename
+        if manage_py.is_file():
+            pathname_relative_to_cwd = "main/manage.py"
+            return pathname_relative_to_cwd
+    raise FileNotFoundError(f"unable to locate manage.py in {cwd=} or `cwd`/main")
+    
+    
 def run_command(
     cmds: list[str], env: Optional[dict] = None, check: bool = True
 ) -> list:
@@ -34,17 +54,18 @@ def run_command(
 
 
 def run_django_commands():
+    manage_py = locate_manage_py()
     try:
-        run_command(["python", "main/manage.py", "makemigrations", "accounts"])
-        run_command(["python", "main/manage.py", "makemigrations", "employees"])
-        run_command(["python", "main/manage.py", "makemigrations", "bingo"])
-        run_command(["python", "main/manage.py", "makemigrations", "knowledge"])
-        run_command(["python", "main/manage.py", "makemigrations", "obstacle"])
-        run_command(["python", "main/manage.py", "migrate"])
+        run_command(["python", manage_py, "makemigrations", "accounts"])
+        run_command(["python", manage_py, "makemigrations", "employees"])
+        run_command(["python", manage_py, "makemigrations", "bingo"])
+        run_command(["python", manage_py, "makemigrations", "knowledge"])
+        run_command(["python", manage_py, "makemigrations", "obstacle"])
+        run_command(["python", manage_py, "migrate"])
         run_command(
             [
                 "python",
-                "main/manage.py",
+                manage_py,
                 "createsuperuser",
                 "--noinput",
                 "--username",
