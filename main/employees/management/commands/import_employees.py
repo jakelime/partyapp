@@ -1,14 +1,10 @@
-import logging
 from pathlib import Path
-from typing import Any, Optional, Self
+from typing import Optional, Self
 
 import pandas as pd
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group as UserGroup
-from django.contrib.auth.models import Permission
 from django.core.management.base import BaseCommand, CommandError
-from django.db import IntegrityError
 from employees import models
 
 # cwd from Django defaults to /root/main/manage.py
@@ -103,6 +99,16 @@ class Command(BaseCommand):
                 )
             )
             fpath_dir = settings.APP_LOCAL_TEMP_DIR / "inputs"
+            if not fpath_dir.is_dir():
+                self.stdout.write(
+                    self.style.ERROR(
+                        f"directory {fpath_dir} does not exist, creating it"
+                    )
+                )
+                fpath_dir.mkdir(parents=True, exist_ok=True)
+                raise CommandError(
+                    f"no file found in {fpath_dir}, please place a CSV file of employee data there"
+                )
             gen = fpath_dir.glob("*.csv")
             fpath = next(gen, None)
             if fpath is None or not fpath.is_file():
