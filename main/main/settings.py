@@ -224,8 +224,8 @@ INFO_COMPANY_COMMITTEE = os.environ.get(
 
 
 # Handles Reverse proxy routing
-FORCE_SCRIPT_NAME = "/durianparty" 
-LOGIN_REDIRECT_URL = f"{FORCE_SCRIPT_NAME}/" # this will override previous
+FORCE_SCRIPT_NAME = "/durianparty"
+LOGIN_REDIRECT_URL = f"{FORCE_SCRIPT_NAME}/"  # this will override previous
 USE_X_FORWARDED_HOST = True
-MEDIA_URL = "/media/" # override to be NOT relative to FORCE_SCRIPT_NAME
-STATIC_URL = "/static/" # override to be NOT relative to FORCE_SCRIPT_NAME
+MEDIA_URL = "/media/"  # override to be NOT relative to FORCE_SCRIPT_NAME
+STATIC_URL = "/static/"  # override to be NOT relative to FORCE_SCRIPT_NAME
