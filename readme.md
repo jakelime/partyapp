@@ -41,6 +41,7 @@ INFO_COMPANY_NAME='myAwesomeCompany'
 INFO_COMPANY_DEPARTMENT='DigitalTransformationDept'
 INFO_COMPANY_COMMITTEE='Party Organisers'
 ADMIN_EMAIL='admin@somecompany.com'
+DJANGO_SUPERUSER_PASSWORD='somesecretPwd101!'
 ```
 
 ## Django Guide
