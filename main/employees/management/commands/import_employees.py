@@ -95,7 +95,7 @@ class Command(BaseCommand):
         else:
             self.stdout.write(
                 self.style.MIGRATE_LABEL(
-                    "default to reading excel file from `app_local_temp/inputs` dir"
+                    "default to reading CSV file from `app_local_temp/inputs` dir"
                 )
             )
             fpath_dir = settings.APP_LOCAL_TEMP_DIR / "inputs"
