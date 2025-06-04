@@ -3,6 +3,7 @@
 
 .vscode
 **/migrations
+migrationbackups/
 
 ### Project specifics ###
 *gbBackup-*.tar.gz
