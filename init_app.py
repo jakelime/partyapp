@@ -78,7 +78,8 @@ def run_django_commands():
             },
             check=False,
         )
-        run_command(["python", "main/manage.py", "import_employees"])
+        run_command(["python", manage_py, "import_employees"])
+        run_command(["python", manage_py, "collectstatic", "--noinput"])
         print("All Django commands executed successfully.")
     except subprocess.CalledProcessError as e:
         print(f"ERROR!!! While running Django commands:\n{e}")
